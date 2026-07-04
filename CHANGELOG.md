@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.3.2] - 2026-07-05
+### Added
+- All six Bayesian domains (TB, malaria, NCD, SRHR, RHIS, SDG 3) now exposed in the
+  UI via a ScenarioModel adapter (analytics/bayesian/) — 11 domains registered.
+- Per-country simulated baselines for Bayesian domains (scripts/generate_bayes_panels.py);
+  RHIS uses the mined HIS maturity panel.
+- Home page restructured into a key-regional-figures dashboard (regional medians per
+  domain) with navigation cards into each scenario workspace.
+- Expanded methodology document (docs/IHSA_Expanded_Methodology_Scenarios.docx): for
+  every domain an Introduction, Predictors-and-evidence-from-literature, and
+  Modelling-framework section, each 6+ paragraphs.
+- UI outcome-direction handling for positive-index domains (SRHR, RHIS, SDG 3).
+
+
 ## [0.3.1] - 2026-07-05
 ### Added
 - Instantiated Bayesian networks for TB (5.7), Malaria (5.8), NCD (5.9), SRHR (5.10),

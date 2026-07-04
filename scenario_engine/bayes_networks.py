@@ -287,3 +287,71 @@ SCENARIO_LIBRARY = {
 
 def available_networks() -> list[str]:
     return list(BUILDERS)
+
+
+# ------------------------------------------------------------ UI/adapter metadata
+# Outcome display: (label, unit, better_direction)   better: 'down' or 'up'
+OUTCOME_META = {
+    "hiv": ("HIV incidence", "per 1,000", "down"),
+    "tb": ("TB incidence", "per 100,000", "down"),
+    "malaria": ("Malaria incidence", "per 1,000 at risk", "down"),
+    "ncd": ("Premature NCD mortality", "probability 30–70", "down"),
+    "srhr": ("SRHR coverage index", "index 0–1", "up"),
+    "rhis": ("HIS maturity index", "0–100", "up"),
+    "sdg3": ("SDG 3 attainment", "probability", "up"),
+}
+
+# Policy levers per domain: (node, label, kind)  kind: 'prob' (0–1 shown as %) or 'score' (0–100)
+# improves: True if raising the lever improves the outcome (green dot), False if it worsens it (orange)
+LEVER_SPECS = {
+    "tb": [("genexpert", "GeneXpert / diagnostic access", "prob", True),
+           ("community_screening", "Community screening", "prob", True),
+           ("drug_availability", "Drug availability", "prob", True),
+           ("digital_adherence", "Digital adherence support", "prob", True),
+           ("tpt", "TB preventive therapy", "prob", True),
+           ("art_coverage", "ART coverage (HIV/TB)", "prob", True)],
+    "malaria": [("itn", "ITN coverage / use", "prob", True),
+                ("irs", "Indoor residual spraying", "prob", True),
+                ("act", "ACT treatment access", "prob", True),
+                ("chemoprevention", "Chemoprevention (SMC/IPTp)", "prob", True),
+                ("rdt", "Rapid diagnostic tests", "prob", True),
+                ("housing", "Improved housing", "prob", True)],
+    "ncd": [("tobacco", "Tobacco use", "prob", False),
+            ("alcohol", "Harmful alcohol use", "prob", False),
+            ("inactivity", "Physical inactivity", "prob", False),
+            ("salt_diet", "High-salt diet", "prob", False),
+            ("obesity", "Obesity", "prob", False),
+            ("htn_control", "Hypertension control", "prob", True),
+            ("diabetes_control", "Diabetes control", "prob", True),
+            ("screening", "NCD screening", "prob", True),
+            ("primary_care_readiness", "Primary-care readiness", "prob", True),
+            ("medicine_availability", "Essential-medicine availability", "prob", True)],
+    "srhr": [("family_planning", "Modern contraception (FP)", "prob", True),
+             ("anc", "Antenatal care", "prob", True),
+             ("skilled_attendance", "Skilled attendance", "prob", True),
+             ("education", "Girls' education", "prob", True),
+             ("gbv_services", "GBV services", "prob", True),
+             ("youth_services", "Youth-friendly services", "prob", True),
+             ("commodity", "Commodity availability", "prob", True),
+             ("gender_inequality", "Gender inequality", "prob", False),
+             ("adolescent_fertility", "Adolescent fertility", "prob", False)],
+    "rhis": [("governance", "Governance & leadership", "score", True),
+             ("data_generation", "Data generation & management", "score", True),
+             ("data_analysis", "Data analysis & synthesis", "score", True),
+             ("communication", "Communication & use", "score", True)],
+    "sdg3": [("uhc", "UHC service coverage", "prob", True),
+             ("financial_protection", "Financial protection", "prob", True),
+             ("health_expenditure", "Government health expenditure", "prob", True),
+             ("his_maturity", "HIS maturity", "prob", True),
+             ("governance", "Governance", "prob", True)],
+}
+
+TITLES = {"tb": "Tuberculosis Explorer", "malaria": "Malaria Explorer",
+          "ncd": "NCD Explorer", "srhr": "SRHR Explorer",
+          "rhis": "Routine HIS / Maturity Explorer", "sdg3": "SDG 3 Attainment Explorer"}
+
+
+def default_baselines(dom: str, country: str | None = None) -> dict:
+    """All node baselines for a domain (introspected from the built network)."""
+    net = BUILDERS[dom](country) if dom == "rhis" else BUILDERS[dom]()
+    return {name: node.baseline for name, node in net.nodes.items()}

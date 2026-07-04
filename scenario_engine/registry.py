@@ -31,7 +31,7 @@ def list_models() -> list[str]:
 def load_builtin_models() -> None:
     """Import domain packages that register themselves. Safe to call repeatedly."""
     import importlib
-    for domain in ("hiv", "maternal", "child_survival"):
+    for domain in ("hiv", "maternal", "child_survival", "bayesian"):
         try:
             importlib.import_module(f"analytics.{domain}")
         except Exception as exc:  # pragma: no cover

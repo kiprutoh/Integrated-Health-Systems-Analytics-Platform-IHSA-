@@ -43,7 +43,10 @@ DOMAIN_ICON = {"hiv": "🧬", "maternal": "🤰", "neonatal": "👶", "child": "
                "ncd": "❤️", "srhr": "🌸", "rhis": "🗂", "sdg3": "🎯"}
 ICON_GRAD = {"hiv": "#ef4444,#ec4899", "maternal": "#f97316,#f59e0b",
              "neonatal": "#38bdf8,#0ea5e9", "child": "#34d399,#14b8a6",
-             "under5": "#a78bfa,#8b5cf6"}
+             "under5": "#a78bfa,#8b5cf6", "tb": "#f43f5e,#fb7185", "malaria": "#10b981,#34d399",
+             "ncd": "#e11d48,#f43f5e", "srhr": "#d946ef,#ec4899", "rhis": "#0ea5e9,#38bdf8",
+             "sdg3": "#eab308,#f59e0b"}
+OUTCOME_BETTER = {"srhr": "up", "rhis": "up", "sdg3": "up"}  # higher is better
 # optional grouping of levers into layers (falls back to one group)
 LEVER_GROUPS = {
     "neonatal": {"sba": "Health system", "neonatal_resuscitation": "Health system",
@@ -160,97 +163,100 @@ def bars_html(values, colors):
 
 
 # ------------------------------------------------------------------ pages
+def _regional_median(model):
+    """Regional median of a domain's primary outcome (fast: reads panel where possible)."""
+    dom = model.domain
+    # bayesian domains: read the outcome column straight from the baseline panel
+    try:
+        from analytics.bayesian.model import _panel
+        import scenario_engine.bayes_networks as _BN
+        if dom in _BN.OUTCOME:
+            if dom == "rhis":
+                df = pd.read_csv(ROOT / "data" / "processed" / "his" / "afro_his_maturity.csv")
+                return float(df["his_maturity_index"].median())
+            pnl = _panel(dom)
+            if pnl is not None and _BN.OUTCOME[dom] in pnl:
+                return float(pnl[_BN.OUTCOME[dom]].median())
+    except Exception:
+        pass
+    vals = []
+    for cty in model.countries():
+        try:
+            vals.append(model.simulate(model.baseline(cty)).metrics[model.primary_outcome])
+        except Exception:
+            pass
+    return float(pd.Series(vals).median()) if vals else float("nan")
+
+
+@st.cache_data(show_spinner=False)
+def _regional_figures():
+    figs = []
+    for dom in list_models():
+        m = get_model(dom)
+        _po, lbl, unit = outcome_meta(m)
+        figs.append((dom, m.title, lbl, unit, _regional_median(m),
+                     OUTCOME_BETTER.get(dom, "down")))
+    return figs
+
+
 def page_home():
-    domains = list_models()
-    dom = st.session_state.get("_domain", "maternal" if "maternal" in domains else domains[0])
-    model = get_model(dom)
-    grad = ICON_GRAD.get(dom, "#f87171,#fb923c")
-    po, po_label, po_unit = outcome_meta(model)
-    med = regional_summary(model)
-
-    # metric tiles: outcome + up to 3 top levers (regional means)
-    panel_levers = model.levers[:3]
-    lever_means = {}
-    for lv in panel_levers:
-        vs = []
-        for cty in model.countries():
-            try:
-                vs.append(model.baseline(cty).values.get(lv.key))
-            except Exception:
-                pass
-        vs = [v for v in vs if v is not None]
-        lever_means[lv.key] = (sum(vs) / len(vs)) if vs else float("nan")
-
-    metrics = [(po_label, f"{med:.0f}", po_unit, "regional median", "good")]
-    for lv in panel_levers:
-        metrics.append((lv.label, f"{lever_means[lv.key]:.0f}{lv.unit}", "regional mean",
-                        "scenario lever", "good"))
-    metrics = metrics[:4]
-
-    mcards = "".join(
-        f'<div class="metric"><div class="l">{l}</div><div class="v">{v}</div>'
-        f'<div class="u">{u}</div><div class="f {cls}">{f}</div></div>'
-        for (l, v, u, f, cls) in metrics)
-
     st.markdown(
-        f'<div class="hero"><div class="chip">🌍 WHO AFRO Health Systems Intelligence Platform</div>'
-        f'<div style="display:flex;gap:1.4rem;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;">'
-        f'<div style="flex:1;min-width:22rem;"><h1>{model.title.split("Explorer")[0].strip()}<br/>'
-        f'<span class="grad">Scenario Explorer</span></h1>'
-        f'<p class="lead">Explore how health-system levers reshape {po_label.lower()} across the 47 WHO AFRO '
-        f'member states — forward what-if and inverse target-seeking, with uncertainty.</p></div>'
-        f'<div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;width:23rem;">{mcards}</div>'
-        f'</div></div>', unsafe_allow_html=True)
+        '<div class="hero"><div class="chip">🌍 WHO AFRO Health Systems Intelligence Platform</div>'
+        '<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:1rem;align-items:flex-end;">'
+        '<div><h1>Regional Health<br/><span class="grad">Scenario Intelligence</span></h1>'
+        '<p class="lead">Key regional figures across the African Region, with Bayesian what-if and '
+        'target-seeking scenarios for every health domain — one engine, shared determinants, '
+        'uncertainty throughout.</p></div></div></div>', unsafe_allow_html=True)
 
     st.write("")
-    b1, b2 = st.columns(2)
-    if b1.button("▶  Start What-if Analysis", use_container_width=True, type="primary"):
-        st.session_state["_section"] = "🧪 What-if analysis"
-        st.rerun()
-    if b2.button("🗺  Explore Regional Insights", use_container_width=True):
-        st.session_state["_section"] = "🧪 What-if analysis"
-        st.session_state["_whatif_tab"] = "Regional data"
-        st.rerun()
+    st.markdown("#### 📊 Key regional figures")
+    st.caption("Baseline regional medians across the 47 WHO AFRO member states (illustrative). "
+               "Click any domain below to open its scenario workspace.")
+
+    figs = _regional_figures()
+    per_row = 4
+    for i in range(0, len(figs), per_row):
+        cols = st.columns(per_row)
+        for col, (dom, title, lbl, unit, val, better) in zip(cols, figs[i:i + per_row]):
+            grad = ICON_GRAD.get(dom, "#f87171,#fb923c")
+            arrow = "▲ higher is better" if better == "up" else "▼ lower is better"
+            acls = "good" if better == "up" else "warn"
+            vtxt = f"{val:.2f}" if val < 5 else f"{val:.0f}"
+            col.markdown(
+                f'<div class="metric" style="border-left:3px solid transparent;'
+                f'background:linear-gradient(#0c1526,#0c1526) padding-box,'
+                f'linear-gradient(135deg,{grad}) border-box;border:1px solid transparent;">'
+                f'<div class="l">{DOMAIN_ICON.get(dom,"📊")} {lbl}</div>'
+                f'<div class="v">{vtxt}</div><div class="u">{unit}</div>'
+                f'<div class="f {acls}">{arrow}</div></div>', unsafe_allow_html=True)
 
     st.write("")
-    features = [
-        ("🌍", f"{len(model.countries())} COUNTRIES", "Country Scenarios",
-         "Adjust health-system levers and instantly visualise projected outcomes across countries.",
-         ["#ef4444", "#f97316", "#f59e0b", "#84cc16", "#22d3ee"], "policy simulations"),
-        ("📦", f"{len(list_models())} DOMAINS", "Scenario Packages",
-         "Compare bundled interventions (workforce, digital, UHC) side-by-side across domains.",
-         ["#f59e0b", "#f97316", "#fbbf24", "#f59e0b", "#eab308"], "planning workshops"),
-        ("📊", "2000–2023 TRENDS", "Regional Insights",
-         "Explore trends, correlations and distributions of outcomes across WHO AFRO countries.",
-         ["#34d399", "#22d3ee", "#2dd4bf", "#14b8a6", "#0ea5e9"], "situational analysis"),
-    ]
-    cols = st.columns(3)
-    for col, (ic, k, t, d, palette, best) in zip(cols, features):
-        col.markdown(
-            f'<div class="feature"><div class="tile" style="background:linear-gradient(135deg,{grad});">{ic}</div>'
-            f'<div class="k">{k}</div><div class="t">{t}</div><div class="d">{d}</div>'
-            f'{bars_html([2,3,4,3.4,4.6], palette)}'
-            f'<div class="bcap"><span>Baseline</span><span>Scenario impact</span></div>'
-            f'<div class="bestfor"><b>Best for:</b> {best}</div></div>', unsafe_allow_html=True)
-
-    st.write("")
-    steps = [("1", "Select domain & country", "Choose a WHO AFRO country dataset"),
-             ("2", "Review status quo", "Reset levers to latest observed baseline"),
-             ("3", "Adjust levers / set target", "Forward what-if or inverse target-seeking"),
-             ("4", "Export results", "Download Excel reports & visual summaries")]
-    scols = st.columns(4)
-    for col, (n, t, d) in zip(scols, steps):
-        col.markdown(f'<div class="step"><div class="ghost">{n}</div><div class="num">{n}</div>'
-                     f'<div class="t">{t}</div><div class="d">{d}</div></div>', unsafe_allow_html=True)
+    st.markdown("#### 🧭 Explore scenarios")
+    st.caption("Each domain is a Bayesian network over layered determinants. Open one to run forward "
+               "what-if and inverse target-seeking scenarios.")
+    domains = list_models()
+    for i in range(0, len(domains), 3):
+        row = st.columns(3)
+        for col, dom in zip(row, domains[i:i + 3]):
+            m = get_model(dom); grad = ICON_GRAD.get(dom, "#1c7c74,#2dd4bf")
+            _po, lbl, unit = outcome_meta(m)
+            with col:
+                st.markdown(
+                    f'<div class="feature"><div class="tile" style="background:linear-gradient(135deg,{grad});">'
+                    f'{DOMAIN_ICON.get(dom,"📊")}</div><div class="k">{len(m.levers)} LEVERS</div>'
+                    f'<div class="t">{m.title}</div>'
+                    f'<div class="d">Outcome: {lbl} ({unit}). Forward what-if + target-seeking, with '
+                    f'uncertainty.</div></div>', unsafe_allow_html=True)
+                if st.button(f"Open {m.title}", key=f"open_{dom}", use_container_width=True):
+                    st.session_state["_domain"] = dom
+                    st.session_state["_section"] = "🧪 What-if analysis"
+                    st.rerun()
 
     st.write("")
     st.markdown('<div class="cta"><h2>Transform Health Planning with Data</h2>'
-                '<p>Use interactive forecasting, regional insights and Bayesian scenario modelling to support '
-                'evidence-based health policy decisions across the African Region.</p></div>',
-                unsafe_allow_html=True)
-    if st.button("🚀  Launch Scenario Explorer", use_container_width=True, type="primary"):
-        st.session_state["_section"] = "🧪 What-if analysis"
-        st.rerun()
+                '<p>Bayesian scenario modelling, regional insights and target-seeking analysis to support '
+                'evidence-based health policy across the African Region.</p></div>', unsafe_allow_html=True)
+
 
 
 def _grouped_levers(model):
@@ -368,8 +374,10 @@ def page_whatif():
                             f'best achievable {inv.achieved:.0f}.</div>', unsafe_allow_html=True)
 
         m1, m2, m3 = st.columns(3)
-        m1.metric(f"Predicted {po_label.split('(')[0].strip()} (scenario)", f"{scen_val:.0f}",
-                  f"{(scen_val-base_val)/base_val*100:+.1f}%" if base_val else None, delta_color="inverse")
+        better = OUTCOME_BETTER.get(dom, "down")
+        dcolor = "normal" if better == "up" else "inverse"
+        m1.metric(f"Predicted {po_label.split('(')[0].strip()} (scenario)", f"{scen_val:.2f}" if scen_val < 5 else f"{scen_val:.0f}",
+                  f"{(scen_val-base_val)/base_val*100:+.1f}%" if base_val else None, delta_color=dcolor)
         m2.metric("Observed (baseline)", f"{base_val:.0f}")
         m3.metric("Change", f"{scen_val-base_val:+.0f}")
 
