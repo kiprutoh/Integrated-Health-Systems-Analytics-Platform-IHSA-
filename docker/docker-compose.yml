@@ -1,0 +1,9 @@
+services:
+  streamlit:
+    build: { context: .., dockerfile: docker/Dockerfile }
+    ports: ["8501:8501"]
+    environment: [IHSA_ENVIRONMENT=production]
+  api:
+    build: { context: .., dockerfile: docker/Dockerfile.api }
+    ports: ["8000:8000"]
+    environment: [IHSA_ENVIRONMENT=production]

@@ -1,0 +1,22 @@
+indicator_code,indicator_name,domain,unit,source,polarity
+UHC_SCI,UHC service coverage index,uhc,index 0-100,WHO GHO,1
+GHED_GGHE_GDP,Government health expenditure,uhc,% of GDP,WHO GHED,1
+CHE_PC,Current health expenditure per capita,uhc,US$,WHO GHED,1
+OOP_CHE,Out-of-pocket expenditure,uhc,% of CHE,WHO GHED,-1
+MMR,Maternal mortality ratio,maternal,"per 100,000 live births",UN MMEIG,-1
+SBA,Skilled birth attendance,maternal,%,DHS/UNICEF,1
+ANC4,Antenatal care (4+ visits),maternal,%,DHS/UNICEF,1
+HIV_INC,HIV incidence (15-49),hiv,"per 1,000 uninfected",UNAIDS,-1
+HIV_PREV,Adult HIV prevalence,hiv,% (15-49),UNAIDS,0
+HIV_ART,ART coverage,hiv,% of PLHIV,UNAIDS,1
+HIV_VLS,Viral load suppression,hiv,% of PLHIV,UNAIDS,1
+TB_INC,TB incidence,tb,"per 100,000",WHO GTB,-1
+TB_TSR,TB treatment success rate,tb,%,WHO GTB,1
+MAL_INC,Malaria incidence,malaria,"per 1,000 at risk",WHO GMP,-1
+ITN_USE,ITN use (children <5),malaria,%,DHS/MIS,1
+NCD_PMORT,NCD premature mortality (30-70),ncd,probability %,WHO GHO,-1
+HTN_CTRL,Hypertension control,ncd,%,STEPS,1
+RHIS_COMPLETE,HMIS reporting completeness,rhis,%,DHIS2,1
+DH_INDEX,Digital health maturity,digital_health,index,WHO/GDHI,1
+MCPR,Modern contraceptive prevalence,srhr,%,DHS/UNFPA,1
+U5MR,Under-five mortality rate,sdg3,"per 1,000 live births",UN IGME,-1
