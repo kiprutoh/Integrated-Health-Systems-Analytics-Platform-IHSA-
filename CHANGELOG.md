@@ -1,5 +1,25 @@
 # Changelog
 
+## [0.3.0] - 2026-07-04
+### Added / reworked
+- Reworked modelling framework as a **Bayesian Health Systems Scenario Engine**
+  (scenario_engine/bayes_engine.py, bayes_networks.py): hierarchical DAG over
+  layered determinants (shocks -> socioeconomic -> system -> intermediate -> outcome),
+  do-operator scenario packages, Monte-Carlo uncertainty propagation, credible
+  intervals and P(target).
+- **HIS maturity mining** (scripts/mine_his_maturity.py) from the WHO AFRO HISFA
+  report -> data/processed/his/afro_his_maturity.csv (38 countries, domain scores,
+  maturity bands). HIS maturity wired as an upstream determinant.
+- Finalized **Bayesian methodology** doc with full mathematical specification and
+  per-domain assumptions: docs/IHSA_Bayesian_Methodology_and_Model_Specification.docx.
+- UI/UX rebuilt to match the WHO AFRO maternal explorer: hero + 2x2 metric cards,
+  feature cards, numbered steps, CTA banner, two-pane what-if workspace with status-quo
+  box, cyan target panel, grouped levers, comparison chart, input-changes table,
+  and 2030 trajectory with 95% band.
+- API connectors extended (ACLED, EM-DAT, DHIS2, UN Population) per the source plan;
+  simulation protocol for indicators without an open API.
+
+
 ## [0.2.0] - 2026-07-04
 ### Added
 - Child-survival domains: neonatal, child (1-59 months) and under-five mortality

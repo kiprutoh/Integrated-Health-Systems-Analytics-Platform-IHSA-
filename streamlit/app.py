@@ -1,9 +1,16 @@
 """
-IHSA Streamlit shell — redesigned UI/UX (drawn from the WHO AFRO maternal explorer).
+IHSA Streamlit shell — UI/UX modelled closely on the WHO AFRO maternal explorer
+(https://what-if-analysis-afro.streamlit.app/).
 
-Dark hero, gradient headlines, glassmorphic cards, and a two-pane scenario
-workspace supporting both forward what-if and inverse (target-seeking) analysis.
-Registry-driven: every registered domain appears automatically.
+Home: chip + gradient hero with 2x2 metric cards, dual CTAs, three feature cards
+with mini bar-charts, four numbered steps, and a gradient CTA banner.
+What-if workspace: radio nav, a dark two-pane layout with a status-quo baseline
+box, a cyan target (work-backwards) panel, grouped forward levers with colour-coded
+dots, a status banner, headline metrics with a 95% interval, a baseline-vs-scenario
+bar chart, an input-changes table, and a trajectory-to-2030 chart.
+
+Registry-driven: every registered domain is available; the maternal styling is the
+template applied to all of them.
 """
 from __future__ import annotations
 
@@ -23,203 +30,389 @@ from scenario_engine.inverse import solve_for_target
 from warehouse import reference
 
 try:
-    import plotly.express as px
+    import plotly.graph_objects as go
     HAS_PLOTLY = True
 except Exception:  # pragma: no cover
     HAS_PLOTLY = False
 
 load_builtin_models()
 
+# ------------------------------------------------------------------ metadata
 DOMAIN_ICON = {"hiv": "🧬", "maternal": "🤰", "neonatal": "👶", "child": "🧒",
                "under5": "🩺", "tb": "🫁", "malaria": "🦟", "uhc": "🏥",
-               "ncd": "❤️", "srhr": "🌸", "rhis": "🗂", "digital_health": "💻", "sdg3": "🎯"}
-DOMAIN_GRAD = {"hiv": "#ef4444,#ec4899", "maternal": "#f97316,#f59e0b",
-               "neonatal": "#38bdf8,#0ea5e9", "child": "#34d399,#14b8a6",
-               "under5": "#a78bfa,#8b5cf6"}
+               "ncd": "❤️", "srhr": "🌸", "rhis": "🗂", "sdg3": "🎯"}
+ICON_GRAD = {"hiv": "#ef4444,#ec4899", "maternal": "#f97316,#f59e0b",
+             "neonatal": "#38bdf8,#0ea5e9", "child": "#34d399,#14b8a6",
+             "under5": "#a78bfa,#8b5cf6"}
+# optional grouping of levers into layers (falls back to one group)
+LEVER_GROUPS = {
+    "neonatal": {"sba": "Health system", "neonatal_resuscitation": "Health system",
+                 "neonatal_sepsis_mgmt": "Health system", "pnc": "Health system",
+                 "kangaroo_mother_care": "Newborn care"},
+}
+
+RED_GRAD = "linear-gradient(90deg,#f87171,#fb923c)"
 
 
-def _css():
+# ------------------------------------------------------------------ styling
+def inject_css():
     st.markdown("""
     <style>
-      .block-container { padding-top: 1.1rem; max-width: 1180px; }
+      .block-container { padding-top: 1rem; max-width: 1240px; }
       div[data-testid="stAppViewContainer"] { background: #020617; }
-      section[data-testid="stSidebar"] { background: #0b1220; }
-      .ihsa-hero { position: relative; overflow: hidden; border-radius: 24px;
-        background: linear-gradient(120deg,#0b132b 0%,#1c2541 52%,#3a506b 100%);
-        border: 1px solid #334155; padding: 2.3rem 2.5rem; margin-bottom: 1.6rem;
-        box-shadow: 0 25px 55px rgba(0,0,0,.4); }
-      .ihsa-hero-glow { position:absolute; right:-40px; top:-40px; width:45%; height:150%;
-        background: radial-gradient(circle at center, rgba(28,124,116,.35), transparent 70%); }
-      .ihsa-chip { display:inline-flex; align-items:center; gap:8px; padding:7px 15px;
-        border-radius:999px; background:rgba(28,124,116,.18); border:1px solid rgba(45,212,191,.4);
-        color:#7dd3fc; font-size:.82rem; font-weight:600; letter-spacing:.04em; margin-bottom:1rem; }
-      .ihsa-h1 { font-size:2.7rem; font-weight:800; line-height:1.08; margin:0 0 .8rem 0; color:#f8fafc; letter-spacing:-.02em; }
-      .ihsa-grad { background:linear-gradient(90deg,#f87171,#fb923c); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-      .ihsa-sub { color:#cbd5e1; font-size:1.02rem; line-height:1.6; max-width:44rem; }
-      .ihsa-metric { border-radius:16px; background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1);
-        padding:1rem 1.1rem; backdrop-filter:blur(8px); }
-      .ihsa-metric .l { font-size:.74rem; color:#94a3b8; text-transform:uppercase; letter-spacing:.05em; }
-      .ihsa-metric .v { font-size:1.9rem; font-weight:800; color:#f8fafc; margin:.15rem 0; }
-      .ihsa-metric .u { font-size:.72rem; color:#94a3b8; }
-      .ihsa-card { border-radius:20px; background:#0f172a; border:1px solid #1e293b; padding:1.4rem 1.5rem;
-        height:100%; box-shadow:0 16px 34px rgba(0,0,0,.28); transition:transform .18s ease, border .18s ease; }
-      .ihsa-card:hover { transform:translateY(-3px); border-color:#334155; }
-      .ihsa-card .ic { width:54px; height:54px; border-radius:15px; display:flex; align-items:center;
-        justify-content:center; font-size:1.6rem; margin-bottom:.9rem; }
-      .ihsa-card .t { font-size:1.2rem; font-weight:700; color:#f1f5f9; margin:.2rem 0 .5rem 0; }
-      .ihsa-card .d { color:#94a3b8; font-size:.9rem; line-height:1.5; min-height:3.4rem; }
-      .ihsa-card .m { font-size:.72rem; letter-spacing:.1em; text-transform:uppercase; color:#64748b; }
-      .pane-anchor { height:0; overflow:hidden; }
-      div[data-testid="column"]:has(.pane-anchor) {
-        background:linear-gradient(165deg,#0f172a 0%,#1e293b 48%,#0f172a 100%);
-        border-radius:20px; border:1px solid rgba(148,163,184,.22); padding:.4rem 1rem 1rem 1rem;
-        box-shadow:0 18px 40px rgba(2,6,23,.35); }
-      div[data-testid="column"]:has(.pane-anchor) label,
-      div[data-testid="column"]:has(.pane-anchor) .stMarkdown p { color:#e2e8f0 !important; }
-      .pane-title { font-size:1.5rem; font-weight:800; line-height:1.12; margin:.4rem 0 .1rem 0; }
-      .pane-title .l1 { color:#f8fafc; display:block; }
-      .pane-title .l2 { display:block; background:linear-gradient(90deg,#f87171,#fb923c);
+      section[data-testid="stSidebar"] { background: #0b1220; border-right: 1px solid #1e293b; }
+      section[data-testid="stSidebar"] * { color: #e2e8f0; }
+      h1,h2,h3,h4,p,span,label,div { color: #e2e8f0; }
+
+      .hero { position:relative; overflow:hidden; border-radius:22px;
+        background:linear-gradient(120deg,#0b132b 0%,#111a33 55%,#20304f 100%);
+        border:1px solid #2a3752; padding:1.8rem 2rem; box-shadow:0 24px 55px rgba(0,0,0,.45); }
+      .chip { display:inline-flex; gap:8px; align-items:center; padding:6px 14px; border-radius:999px;
+        background:rgba(190,60,60,.14); border:1px solid rgba(248,113,113,.4); color:#fca5a5;
+        font-size:.78rem; font-weight:600; letter-spacing:.03em; margin-bottom:.9rem; }
+      .hero h1 { font-size:2.5rem; line-height:1.06; font-weight:800; margin:.1rem 0; color:#f8fafc; }
+      .grad { background:%GRAD%; -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+      .hero p.lead { color:#cbd5e1; font-size:.96rem; line-height:1.55; max-width:34rem; margin-top:.5rem; }
+
+      .metric { border-radius:14px; background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.09);
+        padding:.75rem .85rem; height:100%; }
+      .metric .l { font-size:.66rem; color:#94a3b8; text-transform:uppercase; letter-spacing:.04em; }
+      .metric .v { font-size:1.5rem; font-weight:800; color:#f8fafc; line-height:1.15; margin:.1rem 0; }
+      .metric .u { font-size:.64rem; color:#8ea0b5; }
+      .metric .f { font-size:.66rem; margin-top:.25rem; font-weight:600; }
+      .good { color:#4ade80; } .warn { color:#fbbf24; }
+
+      .feature { border-radius:18px; background:#0c1526; border:1px solid #1c2942; padding:1.1rem 1.2rem;
+        height:100%; box-shadow:0 14px 30px rgba(0,0,0,.3); }
+      .feature .tile { width:46px; height:46px; border-radius:12px; display:flex; align-items:center;
+        justify-content:center; font-size:1.35rem; margin-bottom:.7rem; }
+      .feature .k { font-size:.62rem; letter-spacing:.12em; text-transform:uppercase; color:#64748b; }
+      .feature .t { font-size:1.05rem; font-weight:700; color:#f1f5f9; margin:.15rem 0 .4rem; }
+      .feature .d { color:#94a3b8; font-size:.82rem; line-height:1.45; min-height:3.2rem; }
+      .bars { display:flex; align-items:flex-end; gap:6px; height:54px; margin:.6rem 0 .3rem; }
+      .bars i { flex:1; border-radius:4px 4px 0 0; display:block; }
+      .bcap { display:flex; justify-content:space-between; font-size:.6rem; color:#64748b; }
+      .bestfor { font-size:.72rem; color:#94a3b8; margin-top:.5rem; }
+
+      .step { border-radius:16px; background:#0c1526; border:1px solid #1c2942; padding:1rem 1.1rem;
+        position:relative; overflow:hidden; height:100%; }
+      .step .ghost { position:absolute; right:.5rem; top:-.4rem; font-size:3.2rem; font-weight:800; color:#141f36; }
+      .step .num { width:26px; height:26px; border-radius:8px; background:#e05a4d; color:#fff; font-weight:700;
+        display:flex; align-items:center; justify-content:center; font-size:.8rem; margin-bottom:.5rem; }
+      .step .t { font-weight:700; color:#f1f5f9; font-size:.92rem; } .step .d { color:#94a3b8; font-size:.78rem; margin-top:.2rem; }
+
+      .cta { border-radius:20px; background:linear-gradient(100deg,#e05a4d,#e8823f); padding:1.6rem 2rem; text-align:center;
+        box-shadow:0 20px 45px rgba(224,90,77,.3); }
+      .cta h2 { color:#fff; font-weight:800; margin:0; } .cta p { color:#ffe9e0; margin:.4rem auto 0; max-width:40rem; font-size:.9rem; }
+
+      .pane { background:linear-gradient(165deg,#0f172a,#1b2740 55%,#0f172a); border-radius:18px;
+        border:1px solid rgba(148,163,184,.2); padding:1.1rem 1.2rem; }
+      .pane .pt1 { font-size:1.35rem; font-weight:800; color:#f8fafc; line-height:1.1; }
+      .pane .pt2 { font-size:1.35rem; font-weight:800; line-height:1.1; background:%GRAD%;
         -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-      .pane-sub { color:#94a3b8; font-size:.85rem; margin-bottom:.8rem; }
-    </style>""", unsafe_allow_html=True)
+      .pane .psub { color:#94a3b8; font-size:.82rem; margin:.3rem 0 .6rem; }
+      .sqbox { background:#0c1526; border:1px solid #1c2942; border-radius:12px; padding:.8rem .9rem; margin:.3rem 0; }
+      .sqbox .h { font-weight:700; color:#e2e8f0; font-size:.9rem; }
+      .sqbox .s { color:#93a4bb; font-size:.78rem; margin:.15rem 0 .4rem; }
+      .sqline { color:#f1f5f9; font-weight:700; font-size:.82rem; }
+      .target { background:#0a1a24; border:1px solid #1f5c73; border-radius:12px; padding:.7rem .9rem; margin:.5rem 0; }
+      .target .h { color:#67e8f9; font-weight:700; font-size:.9rem; }
+      .legend { color:#94a3b8; font-size:.74rem; margin:.3rem 0; }
+      .banner-ok { background:rgba(22,101,52,.28); border:1px solid #16a34a; color:#bbf7d0; border-radius:10px;
+        padding:.55rem .8rem; font-size:.82rem; font-weight:600; }
+      .banner-act { background:rgba(120,53,15,.3); border:1px solid #d97706; color:#fed7aa; border-radius:10px;
+        padding:.55rem .8rem; font-size:.82rem; font-weight:600; }
+      .dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; }
+    </style>
+    """.replace("%GRAD%", RED_GRAD), unsafe_allow_html=True)
 
 
-def _nav(section):
-    st.session_state["_section"] = section
-    st.rerun()
+# ------------------------------------------------------------------ helpers
+def regional_summary(model):
+    po = model.primary_outcome
+    vals = []
+    for cty in model.countries():
+        try:
+            vals.append(model.simulate(model.baseline(cty)).metrics[po])
+        except Exception:
+            pass
+    return pd.Series(vals).median() if vals else float("nan")
 
 
-def _hero_metrics():
-    c = reference.countries()
-    return [("Member states", f"{len(c)}", "WHO African Region"),
-            ("Scenario domains", f"{len(list_models())}", "one shared engine"),
-            ("Indicators", f"{len(reference.indicator_catalogue())}", "catalogued"),
-            ("Data agencies", "5", "WB · WHO · UNICEF · UNFPA · UNAIDS")]
+def outcome_meta(model):
+    po = model.primary_outcome
+    o = next((o for o in model.outcomes if o.key == po), None)
+    return po, (o.label if o else po), (o.unit if o else "")
 
 
+def uncertainty_band(value, rel_sigma=0.06):
+    lo = value * (1 - 1.96 * rel_sigma)
+    hi = value * (1 + 1.96 * rel_sigma)
+    return max(0, lo), hi
+
+
+def bars_html(values, colors):
+    m = max(values) or 1
+    cells = "".join(
+        f'<i style="height:{int(18 + 34 * v / m)}px;background:{c};"></i>'
+        for v, c in zip(values, colors))
+    return f'<div class="bars">{cells}</div>'
+
+
+# ------------------------------------------------------------------ pages
 def page_home():
-    st.markdown('<div class="ihsa-hero"><div class="ihsa-hero-glow"></div>'
-                '<div class="ihsa-chip">🌍 WHO AFRO · Integrated Health Systems Analytics</div>'
-                '<div class="ihsa-h1">Health Systems<br/><span class="ihsa-grad">Scenario Intelligence</span></div>'
-                '<div class="ihsa-sub">One platform, one scenario engine, many domains — explore how '
-                'health-system levers reshape mortality, disease and coverage across the African Region, '
-                'with forward what-if and inverse target-seeking analysis.</div></div>',
+    domains = list_models()
+    dom = st.session_state.get("_domain", "maternal" if "maternal" in domains else domains[0])
+    model = get_model(dom)
+    grad = ICON_GRAD.get(dom, "#f87171,#fb923c")
+    po, po_label, po_unit = outcome_meta(model)
+    med = regional_summary(model)
+
+    # metric tiles: outcome + up to 3 top levers (regional means)
+    panel_levers = model.levers[:3]
+    lever_means = {}
+    for lv in panel_levers:
+        vs = []
+        for cty in model.countries():
+            try:
+                vs.append(model.baseline(cty).values.get(lv.key))
+            except Exception:
+                pass
+        vs = [v for v in vs if v is not None]
+        lever_means[lv.key] = (sum(vs) / len(vs)) if vs else float("nan")
+
+    metrics = [(po_label, f"{med:.0f}", po_unit, "regional median", "good")]
+    for lv in panel_levers:
+        metrics.append((lv.label, f"{lever_means[lv.key]:.0f}{lv.unit}", "regional mean",
+                        "scenario lever", "good"))
+    metrics = metrics[:4]
+
+    mcards = "".join(
+        f'<div class="metric"><div class="l">{l}</div><div class="v">{v}</div>'
+        f'<div class="u">{u}</div><div class="f {cls}">{f}</div></div>'
+        for (l, v, u, f, cls) in metrics)
+
+    st.markdown(
+        f'<div class="hero"><div class="chip">🌍 WHO AFRO Health Systems Intelligence Platform</div>'
+        f'<div style="display:flex;gap:1.4rem;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;">'
+        f'<div style="flex:1;min-width:22rem;"><h1>{model.title.split("Explorer")[0].strip()}<br/>'
+        f'<span class="grad">Scenario Explorer</span></h1>'
+        f'<p class="lead">Explore how health-system levers reshape {po_label.lower()} across the 47 WHO AFRO '
+        f'member states — forward what-if and inverse target-seeking, with uncertainty.</p></div>'
+        f'<div style="display:grid;grid-template-columns:1fr 1fr;gap:.6rem;width:23rem;">{mcards}</div>'
+        f'</div></div>', unsafe_allow_html=True)
+
+    st.write("")
+    b1, b2 = st.columns(2)
+    if b1.button("▶  Start What-if Analysis", use_container_width=True, type="primary"):
+        st.session_state["_section"] = "🧪 What-if analysis"
+        st.rerun()
+    if b2.button("🗺  Explore Regional Insights", use_container_width=True):
+        st.session_state["_section"] = "🧪 What-if analysis"
+        st.session_state["_whatif_tab"] = "Regional data"
+        st.rerun()
+
+    st.write("")
+    features = [
+        ("🌍", f"{len(model.countries())} COUNTRIES", "Country Scenarios",
+         "Adjust health-system levers and instantly visualise projected outcomes across countries.",
+         ["#ef4444", "#f97316", "#f59e0b", "#84cc16", "#22d3ee"], "policy simulations"),
+        ("📦", f"{len(list_models())} DOMAINS", "Scenario Packages",
+         "Compare bundled interventions (workforce, digital, UHC) side-by-side across domains.",
+         ["#f59e0b", "#f97316", "#fbbf24", "#f59e0b", "#eab308"], "planning workshops"),
+        ("📊", "2000–2023 TRENDS", "Regional Insights",
+         "Explore trends, correlations and distributions of outcomes across WHO AFRO countries.",
+         ["#34d399", "#22d3ee", "#2dd4bf", "#14b8a6", "#0ea5e9"], "situational analysis"),
+    ]
+    cols = st.columns(3)
+    for col, (ic, k, t, d, palette, best) in zip(cols, features):
+        col.markdown(
+            f'<div class="feature"><div class="tile" style="background:linear-gradient(135deg,{grad});">{ic}</div>'
+            f'<div class="k">{k}</div><div class="t">{t}</div><div class="d">{d}</div>'
+            f'{bars_html([2,3,4,3.4,4.6], palette)}'
+            f'<div class="bcap"><span>Baseline</span><span>Scenario impact</span></div>'
+            f'<div class="bestfor"><b>Best for:</b> {best}</div></div>', unsafe_allow_html=True)
+
+    st.write("")
+    steps = [("1", "Select domain & country", "Choose a WHO AFRO country dataset"),
+             ("2", "Review status quo", "Reset levers to latest observed baseline"),
+             ("3", "Adjust levers / set target", "Forward what-if or inverse target-seeking"),
+             ("4", "Export results", "Download Excel reports & visual summaries")]
+    scols = st.columns(4)
+    for col, (n, t, d) in zip(scols, steps):
+        col.markdown(f'<div class="step"><div class="ghost">{n}</div><div class="num">{n}</div>'
+                     f'<div class="t">{t}</div><div class="d">{d}</div></div>', unsafe_allow_html=True)
+
+    st.write("")
+    st.markdown('<div class="cta"><h2>Transform Health Planning with Data</h2>'
+                '<p>Use interactive forecasting, regional insights and Bayesian scenario modelling to support '
+                'evidence-based health policy decisions across the African Region.</p></div>',
                 unsafe_allow_html=True)
+    if st.button("🚀  Launch Scenario Explorer", use_container_width=True, type="primary"):
+        st.session_state["_section"] = "🧪 What-if analysis"
+        st.rerun()
 
-    cols = st.columns(4)
-    for col, (l, v, u) in zip(cols, _hero_metrics()):
-        col.markdown(f'<div class="ihsa-metric"><div class="l">{l}</div>'
-                     f'<div class="v">{v}</div><div class="u">{u}</div></div>', unsafe_allow_html=True)
 
-    st.markdown("<br/>", unsafe_allow_html=True)
-    st.markdown("#### Explore a domain")
+def _grouped_levers(model):
+    groups: dict[str, list] = {}
+    gmap = LEVER_GROUPS.get(model.domain, {})
+    for lv in model.levers:
+        groups.setdefault(gmap.get(lv.key, "Scenario levers"), []).append(lv)
+    return groups
+
+
+def page_whatif():
     domains = list_models()
-    for i in range(0, len(domains), 3):
-        row = st.columns(3)
-        for col, dom in zip(row, domains[i:i + 3]):
-            m = get_model(dom)
-            g = DOMAIN_GRAD.get(dom, "#1c7c74,#2dd4bf")
-            po = next((o.label for o in m.outcomes), m.primary_outcome)
-            with col:
-                st.markdown(
-                    f'<div class="ihsa-card"><div class="ic" style="background:linear-gradient(135deg,{g});">'
-                    f'{DOMAIN_ICON.get(dom,"📊")}</div><div class="t">{m.title}</div>'
-                    f'<div class="d">Primary outcome: {po}. {len(m.levers)} scenario levers.</div>'
-                    f'<div class="m">what-if · target-seeking</div></div>', unsafe_allow_html=True)
-                if st.button(f"Open {m.title}", key=f"open_{dom}", use_container_width=True):
-                    st.session_state["_domain"] = dom
-                    _nav("🧪 Scenario workspace")
+    st.markdown(f"## {get_model(st.session_state.get('_domain', domains[0])).title} — What-if Scenarios (WHO AFRO)")
+    st.caption("Adjust levers to explore illustrative scenario shifts. Predictions start from the country's "
+               "observed value; moving a lever changes the outcome in the direction implied by the slider.")
 
+    tabs = ["Country scenario", "Preset comparisons", "Regional data", "Data & methods"]
+    tab = st.radio("nav", tabs, horizontal=True, label_visibility="collapsed",
+                   index=tabs.index(st.session_state.pop("_whatif_tab", "Country scenario")))
 
-def page_scenario():
-    st.markdown("### 🧪 Scenario workspace")
-    domains = list_models()
-    dcol, ccol, mcol = st.columns([1.3, 1.3, 1])
-    with dcol:
-        dsel = st.session_state.get("_domain", domains[0])
-        dom = st.selectbox("Domain", domains, index=domains.index(dsel) if dsel in domains else 0,
-                           format_func=lambda d: get_model(d).title)
+    d1, d2 = st.columns([1.4, 1])
+    dsel = st.session_state.get("_domain", domains[0])
+    dom = d1.selectbox("Domain", domains, index=domains.index(dsel) if dsel in domains else 0,
+                       format_func=lambda x: get_model(x).title)
+    st.session_state["_domain"] = dom
     model = get_model(dom)
     engine = ScenarioEngine(model=model)
-    with ccol:
-        country = st.selectbox("Country", model.countries())
-    with mcol:
-        mode = st.radio("Mode", ["Forward", "Target-seeking"], horizontal=True)
+    country = d2.selectbox("Country", model.countries())
 
+    po, po_label, po_unit = outcome_meta(model)
     base = model.baseline(country)
-    po = model.primary_outcome
-    outcome_label = next((o.label for o in model.outcomes if o.key == po), po)
-    outcome_unit = next((o.unit for o in model.outcomes if o.key == po), "")
     base_val = model.simulate(base).metrics[po]
 
-    left, right = st.columns([1, 1.15])
-    inv = None
+    if tab == "Regional data":
+        return _regional(model)
+    if tab == "Data & methods":
+        return _methods()
+
+    left, right = st.columns([1, 1.18])
+
+    # ---------------- LEFT PANE ----------------
     with left:
-        st.markdown('<div class="pane-anchor"></div>', unsafe_allow_html=True)
-        st.markdown(f'<div class="pane-title"><span class="l1">{model.title}</span>'
-                    f'<span class="l2">Scenario Explorer</span></div>'
-                    f'<p class="pane-sub">Baseline {base.year}: {base_val:.1f} {outcome_unit}. '
-                    f'{"Adjust levers forward from status quo." if mode=="Forward" else "Set a target to work backwards."}</p>',
+        summary_bits = " · ".join(
+            [f"{country} · {base.year} · {po_label.split('(')[0].strip()} {base_val:.0f}"]
+            + [f"{lv.label.split(' ')[0]} {base.values.get(lv.key, 0):.0f}{lv.unit}"
+               for lv in model.levers[:3]])
+        st.markdown(
+            f'<div class="pane"><div class="pt1">{model.title.split("Explorer")[0].strip()}</div>'
+            f'<div class="pt2">Scenario Explorer</div>'
+            f'<div class="psub">Set a target to work backwards, or adjust levers forward from status quo.</div>',
+            unsafe_allow_html=True)
+
+        st.markdown(f'<div class="sqbox"><div class="h">Status quo baseline</div>'
+                    f'<div class="s">Reset all levers to the country\'s current status quo.</div>'
+                    f'<div class="sqline">{summary_bits}</div></div>', unsafe_allow_html=True)
+        reset = st.button("Reset to status quo defaults", use_container_width=True, type="primary")
+        st.checkbox("Status quo reviewed — proceed with scenarios", value=True)
+
+        st.markdown('<div class="target"><div class="h">🎯 Target — work backwards</div></div>',
                     unsafe_allow_html=True)
+        tgt = st.number_input(f"Target {po_label} ({po_unit})", value=float(round(base_val * 0.75, 1)),
+                              min_value=0.0, step=1.0)
+        protective_only = st.checkbox("Use priority (protective) levers only", value=True)
+        tcol1, tcol2 = st.columns(2)
+        do_calc = tcol1.button("Calculate required indicators", use_container_width=True)
+        do_apply = tcol2.button("Apply to levers", use_container_width=True)
+
+        st.markdown("**Forward scenario levers**")
+        st.markdown('<div class="legend"><span class="dot" style="background:#22c55e;"></span>'
+                    '+ lowers outcome &nbsp;·&nbsp; <span class="dot" style="background:#f59e0b;"></span>'
+                    '+ raises outcome</div>', unsafe_allow_html=True)
+
+        inv = None
+        if do_calc or do_apply:
+            keys = [l.key for l in model.levers if l.polarity <= 0] if protective_only else None
+            inv = solve_for_target(model, country, tgt, keys)
 
         overrides = {}
-        if mode == "Forward":
-            for lv in model.levers:
-                cur = float(base.values.get(lv.key, lv.min))
-                overrides[lv.key] = st.slider(f"{lv.label} ({lv.unit})", float(lv.min), float(lv.max),
-                                              min(max(cur, lv.min), lv.max), float(lv.step), key=f"s_{dom}_{lv.key}")
-            result = engine.run(country, overrides)
-            scen_val = result.scenario_outcome[po]
-        else:
-            tgt = st.slider(f"Target {outcome_label} ({outcome_unit})",
-                            float(round(base_val * 0.2, 1)), float(round(base_val, 1)),
-                            float(round(base_val * 0.6, 1)))
-            inv = solve_for_target(model, country, tgt)
-            overrides = inv.lever_settings
-            result = engine.run(country, {k: v for k, v in overrides.items() if k in base.values})
-            scen_val = inv.achieved
+        for gname, levers in _grouped_levers(model).items():
+            with st.expander(gname, expanded=True):
+                for lv in levers:
+                    cur = float(base.values.get(lv.key, lv.min))
+                    default = cur
+                    if inv and do_apply and lv.key in inv.lever_settings:
+                        default = float(inv.lever_settings[lv.key])
+                    if reset:
+                        default = cur
+                    dot = "#22c55e" if lv.polarity <= 0 else "#f59e0b"
+                    st.markdown(f'<span class="dot" style="background:{dot};"></span>'
+                                f'<b>{lv.label}</b>', unsafe_allow_html=True)
+                    overrides[lv.key] = st.slider(lv.label, float(lv.min), float(lv.max),
+                                                  min(max(default, lv.min), lv.max), float(lv.step),
+                                                  key=f"s_{dom}_{lv.key}", label_visibility="collapsed")
+        st.markdown("</div>", unsafe_allow_html=True)
 
+    result = engine.run(country, overrides)
+    scen_val = result.scenario_outcome[po]
+
+    # ---------------- RIGHT PANE ----------------
     with right:
-        delta = scen_val - base_val
-        pct = delta / base_val * 100 if base_val else 0
-        st.markdown(f"#### {outcome_label}")
-        a, b = st.columns(2)
-        a.metric("Scenario", f"{scen_val:.1f}", f"{pct:+.0f}%", delta_color="inverse")
-        b.metric("Observed baseline", f"{base_val:.1f}")
-
-        if mode == "Target-seeking" and inv is not None:
-            if inv.feasible:
-                st.success(f"Target reachable at ~{inv.effort_fraction*100:.0f}% of the way to full "
-                           f"coverage on protective levers.")
-            else:
-                st.warning(f"Target not reachable with these levers alone — best achievable is "
-                           f"{inv.achieved:.1f}. Consider cross-domain interventions.")
-            st.caption("Required coverages:")
-            req = pd.DataFrame({"Lever": [next((l.label for l in model.levers if l.key == k), k)
-                                          for k in overrides], "Required %": list(overrides.values())})
-            st.dataframe(req, use_container_width=True, hide_index=True, height=min(280, 60 + 35 * len(req)))
-
-        if result.forecast and HAS_PLOTLY:
-            fc = pd.DataFrame({"Year": result.forecast["years"], outcome_label: result.forecast["values"]})
-            fig = px.area(fc, x="Year", y=outcome_label, title="Illustrative trajectory")
-            fig.update_traces(line_color="#2dd4bf", fillcolor="rgba(45,212,191,.15)")
-            fig.update_layout(height=250, margin=dict(t=36, b=8, l=8, r=8),
-                              paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", font_color="#cbd5e1")
-            st.plotly_chart(fig, use_container_width=True)
-
-    if result.sensitivity:
-        st.markdown("##### Highest-leverage levers (each on its own)")
-        sdf = pd.DataFrame(result.sensitivity).head(8)
-        sdf["lever"] = sdf["lever"].map(lambda k: next((l.label for l in model.levers if l.key == k), k))
-        if HAS_PLOTLY:
-            fig = px.bar(sdf, x="solo_change_pct", y="lever", orientation="h",
-                         color="solo_change_pct", color_continuous_scale="Teal_r",
-                         labels={"solo_change_pct": f"% change in {outcome_label}", "lever": ""})
-            fig.update_layout(height=300, margin=dict(t=10, b=10), paper_bgcolor="rgba(0,0,0,0)",
-                              plot_bgcolor="rgba(0,0,0,0)", font_color="#cbd5e1", coloraxis_showscale=False)
-            st.plotly_chart(fig, use_container_width=True)
+        status_quo = abs(scen_val - base_val) < 1e-6
+        if status_quo:
+            st.markdown('<div class="banner-ok">Status quo active — all levers match latest observed data.</div>',
+                        unsafe_allow_html=True)
         else:
-            st.dataframe(sdf, use_container_width=True, hide_index=True)
+            st.markdown(f'<div class="banner-act">Scenario active — {po_label} moves '
+                        f'{(scen_val-base_val)/base_val*100:+.0f}% vs observed.</div>', unsafe_allow_html=True)
+        if inv is not None:
+            if inv.feasible:
+                st.markdown(f'<div class="banner-ok">Target {tgt:.0f} reachable at ~{inv.effort_fraction*100:.0f}% '
+                            f'of full protective-lever coverage. Click “Apply to levers”.</div>',
+                            unsafe_allow_html=True)
+            else:
+                st.markdown(f'<div class="banner-act">Target {tgt:.0f} not reachable with these levers alone — '
+                            f'best achievable {inv.achieved:.0f}.</div>', unsafe_allow_html=True)
+
+        m1, m2, m3 = st.columns(3)
+        m1.metric(f"Predicted {po_label.split('(')[0].strip()} (scenario)", f"{scen_val:.0f}",
+                  f"{(scen_val-base_val)/base_val*100:+.1f}%" if base_val else None, delta_color="inverse")
+        m2.metric("Observed (baseline)", f"{base_val:.0f}")
+        m3.metric("Change", f"{scen_val-base_val:+.0f}")
+
+        b_lo, b_hi = uncertainty_band(base_val)
+        s_lo, s_hi = uncertainty_band(scen_val)
+        st.caption(f"Uncertainty (95% interval) — baseline: {b_lo:.0f}–{b_hi:.0f}, "
+                   f"scenario: {s_lo:.0f}–{s_hi:.0f}. At default lever settings, scenario equals observed.")
+
+        if HAS_PLOTLY:
+            fig = go.Figure()
+            fig.add_bar(x=["Observed (baseline)"], y=[base_val], marker_color="#3b6fe0",
+                        error_y=dict(type="data", array=[b_hi - base_val], visible=True))
+            fig.add_bar(x=["Scenario"], y=[scen_val], marker_color="#22b07d",
+                        error_y=dict(type="data", array=[s_hi - scen_val], visible=True))
+            fig.update_layout(title=f"{country}: {po_label} comparison", height=340, showlegend=False,
+                              paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                              font_color="#cbd5e1", margin=dict(t=40, b=10, l=10, r=10))
+            st.plotly_chart(fig, use_container_width=True)
+
+    # input changes table (full width)
+    st.markdown("#### Input changes")
+    rows = []
+    for lv in model.levers:
+        b = base.values.get(lv.key, 0.0)
+        s = overrides.get(lv.key, b)
+        arrow = "outcome ↓" if lv.polarity <= 0 else "outcome ↑"
+        rows.append({"Indicator": lv.label, "Baseline": round(b, 2), "Scenario": round(s, 2),
+                     "If you increase this lever": arrow, "Change": round(s - b, 2)})
+    st.dataframe(pd.DataFrame(rows), use_container_width=True, hide_index=True)
+
+    # trajectory to 2030
+    if result.forecast and HAS_PLOTLY:
+        st.markdown(f"#### Projected {po_label.split('(')[0].strip()} trajectory to 2030")
+        yrs, vals = result.forecast["years"], result.forecast["values"]
+        band = [uncertainty_band(v) for v in vals]
+        fig = go.Figure()
+        fig.add_scatter(x=yrs, y=[b[1] for b in band], line=dict(width=0), showlegend=False, hoverinfo="skip")
+        fig.add_scatter(x=yrs, y=[b[0] for b in band], fill="tonexty", line=dict(width=0),
+                        fillcolor="rgba(45,212,191,.15)", name="95% interval")
+        fig.add_scatter(x=yrs, y=vals, line=dict(color="#22b07d", width=3), name=f"{po_label} (mean)")
+        fig.update_layout(height=340, paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                          font_color="#cbd5e1", margin=dict(t=20, b=10), xaxis_title="Year")
+        st.plotly_chart(fig, use_container_width=True)
 
     with st.expander("Policy notes & export"):
         for r in result.recommendations:
@@ -230,59 +423,60 @@ def page_scenario():
                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 
-def page_regional():
-    st.markdown("### 📊 Regional insights")
-    dom = st.selectbox("Domain", list_models(), format_func=lambda d: get_model(d).title)
-    model = get_model(dom)
-    po = model.primary_outcome
+def _regional(model):
+    po, po_label, _ = outcome_meta(model)
     rows = []
     for cty in model.countries():
         try:
-            b = model.baseline(cty)
-            rows.append({"country": cty, "iso3": reference.iso3_of(cty), po: model.simulate(b).metrics[po]})
+            rows.append({"country": cty, "iso3": reference.iso3_of(cty),
+                         po_label: round(model.simulate(model.baseline(cty)).metrics[po], 1)})
         except Exception:
             pass
     df = pd.DataFrame(rows)
-    label = next((o.label for o in model.outcomes), po)
     if HAS_PLOTLY and not df.empty:
-        fig = px.choropleth(df, locations="iso3", color=po, hover_name="country", scope="africa",
-                            color_continuous_scale="Reds", labels={po: label}, title=f"{label} — baseline")
-        fig.update_layout(height=560, paper_bgcolor="rgba(0,0,0,0)", geo_bgcolor="rgba(0,0,0,0)",
+        fig = go.Figure(go.Choropleth(locations=df["iso3"], z=df[po_label], text=df["country"],
+                                      colorscale="Reds", marker_line_color="#0b1220"))
+        fig.update_geos(scope="africa", bgcolor="rgba(0,0,0,0)")
+        fig.update_layout(title=f"{po_label} — baseline", height=560, paper_bgcolor="rgba(0,0,0,0)",
                           font_color="#cbd5e1", margin=dict(t=40, b=0))
         st.plotly_chart(fig, use_container_width=True)
-    if not df.empty:
-        st.dataframe(df.sort_values(po, ascending=False), use_container_width=True, hide_index=True)
+    st.dataframe(df.sort_values(po_label, ascending=False), use_container_width=True, hide_index=True)
 
 
-def page_data():
-    st.markdown("### 🗂 Data & sources")
-    st.caption("Master reference data and domain panels. Production deployments refresh these by "
-               "running `python scripts/mine_data.py` against the live agency APIs.")
-    st.markdown("**Agencies mined:** World Bank · WHO GHO · UNICEF SDMX · UNFPA · UNAIDS")
+def _methods():
+    st.markdown("#### Data & methods")
+    st.markdown("Scenarios run on the IHSA engine. The reworked framework represents each domain as a "
+                "**Bayesian network** over layered determinants (shocks → socioeconomic → system → intermediate → "
+                "outcome), with do-operator interventions and Monte-Carlo uncertainty propagation.")
+    st.markdown("**Agencies mined:** World Bank · WHO GHO · UNICEF SDMX · UNFPA · UNAIDS · ACLED · EM-DAT · DHIS2. "
+                "HIS maturity is mined from the WHO AFRO HIS assessment.")
     st.dataframe(reference.indicator_catalogue(), use_container_width=True, hide_index=True)
-    st.markdown("**AFRO master country table (47 member states)**")
-    st.dataframe(reference.countries(), use_container_width=True, hide_index=True, height=340)
 
 
-PAGES = {"🏠 Home": page_home, "🧪 Scenario workspace": page_scenario,
-         "📊 Regional insights": page_regional, "🗂 Data & sources": page_data}
+PAGES = {"🏠 Home": page_home, "🧪 What-if analysis": page_whatif}
 
 
 def main():
     st.set_page_config(page_title="IHSA · WHO AFRO", page_icon="🌍", layout="wide",
                        initial_sidebar_state="expanded")
-    _css()
+    inject_css()
     with st.sidebar:
-        st.markdown("## 🌍 IHSA")
-        st.caption(f"Enterprise v{settings.version}")
+        st.markdown("### 🌍 IHSA")
+        st.caption(f"WHO AFRO · Health Systems Intelligence · v{settings.version}")
+        st.markdown("**Navigation**")
         keys = list(PAGES)
-        default = st.session_state.get("_section", keys[0])
-        choice = st.radio("Navigate", keys, index=keys.index(default) if default in keys else 0,
-                          label_visibility="collapsed")
-        st.session_state["_section"] = choice
+        cur = st.session_state.get("_section", keys[0])
+        for k in keys:
+            if st.button(k, use_container_width=True, type="primary" if k == cur else "secondary"):
+                st.session_state["_section"] = k
+                st.rerun()
+        st.markdown("---")
+        st.markdown("**Quick guide**")
+        st.markdown("- Review status quo baseline\n- Adjust levers (🟢 lowers the outcome when ↑)\n"
+                    "- Set a target to work backwards\n- Export Excel reports")
         st.markdown("---")
         st.caption("Illustrative decision-support — not official estimates.")
-    PAGES[choice]()
+    PAGES.get(st.session_state.get("_section", "🏠 Home"), page_home)()
 
 
 if __name__ == "__main__":
