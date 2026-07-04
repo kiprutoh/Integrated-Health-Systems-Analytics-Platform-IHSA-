@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.3.1] - 2026-07-05
+### Added
+- Instantiated Bayesian networks for TB (5.7), Malaria (5.8), NCD (5.9), SRHR (5.10),
+  Routine HIS / HIS maturity (5.11) and SDG 3 attainment (5.12) in
+  scenario_engine/bayes_networks.py — each with layered parents, structural signs,
+  links and a scenario package library (BN.SCENARIO_LIBRARY).
+- TB uses a find-treat-cure cascade; malaria multiplicative vector control + flood
+  shock; NCD comparative-risk on premature mortality; SRHR a positive coverage index;
+  RHIS built from the mined WHO AFRO HIS maturity data (per-country baselines);
+  SDG 3 an integrating node over the other outcomes and enablers.
+- scripts/run_bayes_scenarios.py runs the full library across all domains.
+- tests/test_bayes.py extended to cover all networks (baseline invariance,
+  scenario direction, credible intervals, mined-baseline RHIS, TB cascade).
+
+
 ## [0.3.0] - 2026-07-04
 ### Added / reworked
 - Reworked modelling framework as a **Bayesian Health Systems Scenario Engine**
