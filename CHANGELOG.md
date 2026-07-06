@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.3.3] - 2026-07-05
+### Added
+- UHC registered as a full scenario (Universal Health Coverage Explorer) — 12 domains
+  in the UI; financing production function with a separate financial-protection node.
+- Definitive methodology (docs/IHSA_Definitive_Methodology.docx): first-principles
+  derivations of every method (Bayesian networks; and, where more appropriate,
+  Lives Saved Tool cause-deletion, survival decomposition, comparative risk assessment,
+  financing production function, composite maturity index, target-gap trajectory,
+  additive monotonic bootstrap), a notation table defining every term, Harvard in-text
+  citations and a full reference list, and embedded framework diagrams.
+- Framework diagrams (scripts/generate_diagrams.py -> docs/figures/): five-layer
+  hierarchy DAG, HIV network DAG, and a method-selection map.
+- Mathematical derivation comments added to scenario_engine/bayes_engine.py,
+  analytics/child_survival/model.py for developer reproducibility.
+- Scenario runner derives labels/direction from network metadata (stays in sync).
+
+
 ## [0.3.2] - 2026-07-05
 ### Added
 - All six Bayesian domains (TB, malaria, NCD, SRHR, RHIS, SDG 3) now exposed in the

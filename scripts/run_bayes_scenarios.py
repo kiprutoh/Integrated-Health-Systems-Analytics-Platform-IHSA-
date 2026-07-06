@@ -14,10 +14,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from scenario_engine.bayes_engine import scenario_effect  # noqa: E402
 from scenario_engine import bayes_networks as BN  # noqa: E402
 
-LABEL = {"hiv": "HIV incidence /1k", "tb": "TB incidence /100k", "malaria": "Malaria incidence /1k",
-         "ncd": "Premature NCD mortality (prob)", "srhr": "SRHR coverage index (prob)",
-         "rhis": "HIS maturity index /100", "sdg3": "P(SDG 3 attainment)"}
-BETTER_UP = {"srhr", "rhis", "sdg3"}  # domains where a higher outcome is better
+# labels and direction come straight from the network metadata (stays in sync)
+LABEL = {d: f"{lbl} ({unit})" for d, (lbl, unit, _b) in BN.OUTCOME_META.items()}
+BETTER_UP = {d for d, (_l, _u, b) in BN.OUTCOME_META.items() if b == "up"}
 
 
 def main():

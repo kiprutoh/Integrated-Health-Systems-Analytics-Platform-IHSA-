@@ -252,14 +252,55 @@ def build_sdg3(baseline: dict | None = None) -> BayesianNetwork:
     return n
 
 
-BUILDERS = {"hiv": build_hiv, "tb": build_tb, "malaria": build_malaria, "ncd": build_ncd,
+
+# ------------------------------------------- 5.6 Universal Health Coverage
+def build_uhc(baseline: dict | None = None) -> BayesianNetwork:
+    b = {"sci": 0.50, "financial_protection": 0.55,
+         "gov_health_expenditure": 0.40, "prepaid_coverage": 0.30, "out_of_pocket": 0.40,
+         "service_readiness": 0.55, "workforce_density": 0.45, "medicine_availability": 0.60,
+         "his_maturity": 0.55, "governance": 0.50, "poverty": 0.40}
+    if baseline:
+        b.update(baseline)
+    n = BayesianNetwork("uhc")
+    for k, layer in [("gov_health_expenditure", "financing"), ("prepaid_coverage", "financing"),
+                     ("out_of_pocket", "financing"), ("service_readiness", "system"),
+                     ("workforce_density", "system"), ("medicine_availability", "system"),
+                     ("his_maturity", "system"), ("governance", "governance"),
+                     ("poverty", "socioeconomic")]:
+        n.add(Node(k, layer, "prob", b[k], lo=0, hi=1))
+    # service coverage index (fraction 0-1, logit link gives diminishing returns near saturation)
+    n.add(Node("sci", "outcome", "prob", b["sci"], lo=0.05, hi=0.99, link="logit",
+               parents=[Edge("gov_health_expenditure", 0.9, 0.14, +1, b["gov_health_expenditure"]),
+                        Edge("prepaid_coverage", 0.7, 0.12, +1, b["prepaid_coverage"]),
+                        Edge("service_readiness", 1.0, 0.14, +1, b["service_readiness"]),
+                        Edge("workforce_density", 0.8, 0.12, +1, b["workforce_density"]),
+                        Edge("medicine_availability", 0.6, 0.10, +1, b["medicine_availability"]),
+                        Edge("his_maturity", 0.5, 0.10, +1, b["his_maturity"]),
+                        Edge("governance", 0.5, 0.10, +1, b["governance"]),
+                        Edge("out_of_pocket", 0.5, 0.10, -1, b["out_of_pocket"]),
+                        Edge("poverty", 0.4, 0.10, -1, b["poverty"])]))
+    # financial protection: rises with prepayment/coverage, falls with out-of-pocket
+    n.add(Node("financial_protection", "outcome", "prob", b["financial_protection"], lo=0.05, hi=0.99,
+               link="logit",
+               parents=[Edge("prepaid_coverage", 1.0, 0.14, +1, b["prepaid_coverage"]),
+                        Edge("gov_health_expenditure", 0.6, 0.10, +1, b["gov_health_expenditure"]),
+                        Edge("out_of_pocket", 1.2, 0.16, -1, b["out_of_pocket"]),
+                        Edge("sci", 0.5, 0.10, +1, b["sci"])]))
+    return n
+
+
+BUILDERS = {"hiv": build_hiv, "uhc": build_uhc, "tb": build_tb, "malaria": build_malaria, "ncd": build_ncd,
             "srhr": build_srhr, "rhis": build_rhis, "sdg3": build_sdg3}
 
-OUTCOME = {"hiv": "incidence", "tb": "incidence", "malaria": "incidence", "ncd": "premature_mortality",
+OUTCOME = {"hiv": "incidence", "uhc": "sci", "tb": "incidence", "malaria": "incidence", "ncd": "premature_mortality",
            "srhr": "srhr_index", "rhis": "his_maturity_index", "sdg3": "p_sdg3"}
 
 # Domain-specific scenario libraries (do-sets across layers)
 SCENARIO_LIBRARY = {
+    "uhc": {"UHC investment": {"gov_health_expenditure": 0.60, "prepaid_coverage": 0.55,
+                               "out_of_pocket": 0.25, "service_readiness": 0.75, "workforce_density": 0.65},
+            "Financing transition": {"out_of_pocket": 0.20, "prepaid_coverage": 0.60},
+            "Workforce + medicines": {"workforce_density": 0.70, "medicine_availability": 0.85}},
     "hiv": {"HIV Acceleration": {"art_coverage": 0.95, "hiv_testing": 0.95, "supply_chain": 0.90},
             "Digital Transformation": {"his_maturity": 0.90}, "Conflict shock": {"conflict": 0.8}},
     "tb": {"Find-Treat-Cure": {"genexpert": 0.90, "community_screening": 0.85, "drug_availability": 0.95,
@@ -293,6 +334,7 @@ def available_networks() -> list[str]:
 # Outcome display: (label, unit, better_direction)   better: 'down' or 'up'
 OUTCOME_META = {
     "hiv": ("HIV incidence", "per 1,000", "down"),
+    "uhc": ("UHC service coverage index", "index 0–1", "up"),
     "tb": ("TB incidence", "per 100,000", "down"),
     "malaria": ("Malaria incidence", "per 1,000 at risk", "down"),
     "ncd": ("Premature NCD mortality", "probability 30–70", "down"),
@@ -304,6 +346,15 @@ OUTCOME_META = {
 # Policy levers per domain: (node, label, kind)  kind: 'prob' (0–1 shown as %) or 'score' (0–100)
 # improves: True if raising the lever improves the outcome (green dot), False if it worsens it (orange)
 LEVER_SPECS = {
+    "uhc": [("gov_health_expenditure", "Government health expenditure", "prob", True),
+            ("prepaid_coverage", "Prepaid/pooled coverage", "prob", True),
+            ("service_readiness", "Service readiness", "prob", True),
+            ("workforce_density", "Health-workforce density", "prob", True),
+            ("medicine_availability", "Essential-medicine availability", "prob", True),
+            ("his_maturity", "HIS maturity", "prob", True),
+            ("governance", "Governance", "prob", True),
+            ("out_of_pocket", "Out-of-pocket share", "prob", False),
+            ("poverty", "Poverty", "prob", False)],
     "tb": [("genexpert", "GeneXpert / diagnostic access", "prob", True),
            ("community_screening", "Community screening", "prob", True),
            ("drug_availability", "Drug availability", "prob", True),
@@ -346,7 +397,7 @@ LEVER_SPECS = {
              ("governance", "Governance", "prob", True)],
 }
 
-TITLES = {"tb": "Tuberculosis Explorer", "malaria": "Malaria Explorer",
+TITLES = {"uhc": "Universal Health Coverage Explorer", "tb": "Tuberculosis Explorer", "malaria": "Malaria Explorer",
           "ncd": "NCD Explorer", "srhr": "SRHR Explorer",
           "rhis": "Routine HIS / Maturity Explorer", "sdg3": "SDG 3 Attainment Explorer"}
 

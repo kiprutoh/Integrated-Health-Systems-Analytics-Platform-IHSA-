@@ -25,7 +25,7 @@ OUT = ROOT / "data" / "processed" / "bayes"
 # outcome burden multiplier by subregion (higher = worse for 'down' outcomes)
 BURDEN = {"Western Africa": 1.25, "Central Africa": 1.2, "Eastern Africa": 0.95,
           "Southern Africa": 0.85, "Northern Africa": 0.6}
-SIM_DOMAINS = ["tb", "malaria", "ncd", "srhr", "sdg3"]
+SIM_DOMAINS = ["uhc", "tb", "malaria", "ncd", "srhr", "sdg3"]
 
 
 def _clip01(x):

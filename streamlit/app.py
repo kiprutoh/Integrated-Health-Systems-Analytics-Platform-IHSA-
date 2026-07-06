@@ -45,8 +45,8 @@ ICON_GRAD = {"hiv": "#ef4444,#ec4899", "maternal": "#f97316,#f59e0b",
              "neonatal": "#38bdf8,#0ea5e9", "child": "#34d399,#14b8a6",
              "under5": "#a78bfa,#8b5cf6", "tb": "#f43f5e,#fb7185", "malaria": "#10b981,#34d399",
              "ncd": "#e11d48,#f43f5e", "srhr": "#d946ef,#ec4899", "rhis": "#0ea5e9,#38bdf8",
-             "sdg3": "#eab308,#f59e0b"}
-OUTCOME_BETTER = {"srhr": "up", "rhis": "up", "sdg3": "up"}  # higher is better
+             "sdg3": "#eab308,#f59e0b", "uhc": "#0ea5e9,#22d3ee"}
+OUTCOME_BETTER = {"srhr": "up", "rhis": "up", "sdg3": "up", "uhc": "up"}  # higher is better
 # optional grouping of levers into layers (falls back to one group)
 LEVER_GROUPS = {
     "neonatal": {"sba": "Health system", "neonatal_resuscitation": "Health system",

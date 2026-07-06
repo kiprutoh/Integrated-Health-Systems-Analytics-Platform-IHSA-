@@ -47,10 +47,23 @@ def _panel() -> pd.DataFrame:
 
 
 def _reduction_factor(base: dict, scen: dict, impact: dict) -> float:
+    """Reduced-form Lives-Saved-Tool (LiST) cause-deletion multiplier.
+
+    LiST accounting (Walker et al., 2013):
+        deaths_averted = sum_causes [ D_cause * AF_cause * sum_int(e_int * dC_int) ]
+    Here each intervention's single coefficient `imp` already folds the product
+    (cause share x affected fraction x efficacy) into one "mortality reduction per
+    unit coverage gain". Raising coverage from C0 to C1 multiplies the rate by
+        (1 - imp * dC),   dC = (C1 - C0)   [fraction, >= 0]
+    and independent interventions combine multiplicatively, so the surviving
+    fraction of the rate is
+        R = prod_int (1 - imp_int * dC_int)     (floored at 0.05 to stay positive)
+    The domain models then apply:  rate_scenario = rate_baseline * R.
+    """
     f = 1.0
     for lever, imp in impact.items():
-        dc = (scen.get(lever, base[lever]) - base[lever]) / 100.0
-        if dc > 0:
+        dc = (scen.get(lever, base[lever]) - base[lever]) / 100.0  # coverage gain (fraction)
+        if dc > 0:                                                 # only scale-ups avert deaths
             f *= (1.0 - imp * dc)
     return max(0.05, f)
 

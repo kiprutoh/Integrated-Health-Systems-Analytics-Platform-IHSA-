@@ -101,7 +101,7 @@ def _panel_rhis():
 
 def register_bayesian_models():
     models = {}
-    for dom in ("tb", "malaria", "ncd", "srhr", "rhis", "sdg3"):
+    for dom in ("uhc", "tb", "malaria", "ncd", "srhr", "rhis", "sdg3"):
         models[dom] = register_model(BayesianScenarioModel(dom))
     return models
 
