@@ -101,13 +101,21 @@ SOURCE_FN = {"worldbank": mine_world_bank, "who_gho": mine_who_gho}
 
 
 def impute(panel: pd.DataFrame) -> pd.DataFrame:
-    """Within-country forward/back fill, then regional median for residual gaps."""
-    df = panel.sort_values(["iso3", "year"]).copy()
-    value_cols = [c for c in df.columns if c not in ("iso3", "year")]
-    df[value_cols] = df.groupby("iso3")[value_cols].transform(lambda s: s.ffill().bfill())
-    for c in value_cols:
-        df[c] = df[c].fillna(df.groupby("year")[c].transform("median"))
-    return df
+    """Impute the merged indicator panel with the IHSA imputation framework
+    (temporal -> MICE -> hierarchical); see warehouse/imputation.py."""
+    from warehouse.imputation import impute_panel
+
+    df = panel.copy()
+    if "subregion" not in df.columns:
+        ref = reference.countries()[["iso3", "subregion"]]
+        df = df.merge(ref, on="iso3", how="left")
+    value_cols = [c for c in df.columns if c not in ("iso3", "year", "country", "subregion")]
+    if not value_cols:
+        return panel
+    res = impute_panel(df, value_cols, m=1)          # single completed panel for the warehouse
+    out = res.data
+    log.info("imputation: %s", str(res.report).splitlines()[0])
+    return out
 
 
 def main() -> None:

@@ -143,3 +143,49 @@ if __name__ == "__main__":
     fig_hierarchy(); fig_hiv_dag(); fig_method_selection()
     for f in sorted(OUT.glob("*.png")):
         print("wrote", f.relative_to(OUT.parent.parent), f.stat().st_size, "bytes")
+
+
+# ------------------------------------------------------- Fig 4: imputation flow
+def fig_imputation():
+    import matplotlib.pyplot as plt
+    from matplotlib.patches import FancyArrowPatch, FancyBboxPatch
+    fig, ax = plt.subplots(figsize=(11, 6.0))
+    ax.set_xlim(0, 11); ax.set_ylim(0, 6.2); ax.axis("off")
+
+    def box(x, y, w, h, t, fc, fs=8.6, tc="white"):
+        ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0.02,rounding_size=0.06",
+                                    linewidth=1.1, edgecolor="white", facecolor=fc, zorder=2))
+        ax.text(x + w / 2, y + h / 2, t, ha="center", va="center", color=tc, fontsize=fs,
+                fontweight="bold", zorder=3)
+
+    def arr(p1, p2, color=SLATE, lw=1.4):
+        ax.add_patch(FancyArrowPatch(p1, p2, arrowstyle="-|>", mutation_scale=13, color=color, lw=lw, zorder=1))
+
+    box(0.3, 4.9, 2.1, 0.9, "Incomplete\npanel D", NAVY)
+    box(0.3, 3.2, 2.1, 0.9, "Missingness\ndiagnosis\n(MCAR/MAR/MNAR)", SLATE, fs=7.8)
+    arr((1.35, 4.9), (1.35, 4.1))
+
+    box(3.1, 4.9, 2.3, 0.9, "1  Temporal\ninterpolation\n(within country)", TEAL, fs=7.9)
+    box(3.1, 3.4, 2.3, 0.9, "2  MICE\n(Bayesian, across\nindicators)", "#5B3A86", fs=7.9)
+    box(3.1, 1.9, 2.3, 0.9, "3  Hierarchical\nshrinkage\n(subregion)", AMBER, fs=7.9)
+    arr((2.4, 5.35), (3.1, 5.35)); arr((4.25, 4.9), (4.25, 4.3)); arr((4.25, 3.4), (4.25, 2.8))
+
+    box(6.1, 3.4, 2.3, 2.4, "Constrain to\nbounds  +\nflag provenance\n\n(repeat m times\nwith independent\nnoise)", RED, fs=8.0)
+    arr((5.4, 5.35), (6.1, 4.7)); arr((5.4, 3.85), (6.1, 4.3)); arr((5.4, 2.35), (6.1, 3.9))
+
+    box(9.0, 4.4, 1.8, 1.4, "m completed\ndatasets", NAVY, fs=8.2)
+    box(9.0, 2.5, 1.8, 1.4, "Rubin's rules\npooling\nT = Ū + (1+1/m)B", TEAL, fs=7.6)
+    arr((8.4, 4.9), (9.0, 5.1)); arr((9.9, 4.4), (9.9, 3.9))
+
+    box(6.1, 0.5, 4.7, 1.0, "Held-out validation → auto-calibrate interval width to nominal coverage",
+        "#334155", fs=8.2)
+    arr((9.9, 2.5), (8.45, 1.5), color=AMBER); arr((6.1, 1.0), (4.25, 1.9), color=AMBER, lw=1.1)
+
+    ax.set_title("Figure 4.  The IHSA missing-data imputation framework",
+                 fontsize=12.5, fontweight="bold", color=NAVY, loc="left")
+    fig.tight_layout(); fig.savefig(OUT / "fig_imputation.png", dpi=170, bbox_inches="tight")
+    plt.close(fig)
+
+
+if __name__ == "__main__":
+    fig_imputation()

@@ -87,12 +87,17 @@ def build_tb(baseline: dict | None = None) -> BayesianNetwork:
 def build_malaria(baseline: dict | None = None) -> BayesianNetwork:
     b = {"incidence": 220.0, "itn": 0.55, "irs": 0.20, "act": 0.60, "chemoprevention": 0.30,
          "rdt": 0.60, "housing": 0.40, "supply_chain": 0.70, "his_maturity": 0.55,
-         "floods": 0.0, "rainfall": 0.5}
+         "floods": 0.0, "rainfall": 0.5,
+         # added evidence-grounded predictors
+         "vaccine": 0.10, "larval_source_mgmt": 0.15, "care_seeking": 0.55,
+         "insecticide_resistance": 0.35}
     if baseline:
         b.update(baseline)
     n = BayesianNetwork("malaria")
     for k, layer in [("itn", "intermediate"), ("irs", "intermediate"), ("act", "intermediate"),
                      ("chemoprevention", "intermediate"), ("rdt", "intermediate"),
+                     ("vaccine", "intermediate"), ("larval_source_mgmt", "intermediate"),
+                     ("care_seeking", "intermediate"), ("insecticide_resistance", "risk"),
                      ("housing", "socioeconomic"), ("his_maturity", "system"), ("rainfall", "shock")]:
         n.add(Node(k, layer, "prob", b[k], lo=0, hi=1))
     n.add(Node("floods", "shock", "continuous", b["floods"], lo=0, hi=1))
@@ -100,12 +105,16 @@ def build_malaria(baseline: dict | None = None) -> BayesianNetwork:
                parents=[Edge("his_maturity", 0.9, 0.12, +1, b["his_maturity"]),
                         Edge("floods", 0.7, 0.15, -1, 0.0)]))
     n.add(Node("incidence", "outcome", "rate", b["incidence"], lo=1, hi=1200, noise_sd=0.05, link="log",
-               parents=[Edge("itn", 1.4, 0.18, -1, b["itn"]),
+               parents=[Edge("itn", 1.4, 0.18, -1, b["itn"]),               # Lengeler 2004
                         Edge("irs", 0.9, 0.14, -1, b["irs"]),
-                        Edge("chemoprevention", 1.0, 0.15, -1, b["chemoprevention"]),
+                        Edge("chemoprevention", 1.0, 0.15, -1, b["chemoprevention"]),  # SMC/IPTp
                         Edge("act", 0.5, 0.10, -1, b["act"]),
+                        Edge("vaccine", 0.5, 0.12, -1, b["vaccine"]),        # RTS,S / R21
+                        Edge("larval_source_mgmt", 0.4, 0.10, -1, b["larval_source_mgmt"]),  # LSM
+                        Edge("care_seeking", 0.4, 0.10, -1, b["care_seeking"]),
                         Edge("supply_chain", 0.7, 0.12, -1, b["supply_chain"]),
-                        Edge("housing", 0.4, 0.10, -1, b["housing"]),
+                        Edge("housing", 0.4, 0.10, -1, b["housing"]),        # Tusting 2015
+                        Edge("insecticide_resistance", 0.5, 0.12, +1, b["insecticide_resistance"]),
                         Edge("floods", 0.45, 0.10, +1, 0.0)]))
     return n
 
@@ -198,23 +207,49 @@ def _his_baseline(country: str | None) -> dict:
 
 def build_rhis(country: str | None = None, baseline: dict | None = None) -> BayesianNetwork:
     b = _his_baseline(country)
+    # evidence-grounded sub-domain indicators (PRISM technical/organisational/behavioural
+    # determinants; WHO AFRO HIS assessment domains). Defaults where the mined table is coarse.
+    for k, d in {"routine_reporting": b.get("data_generation", 55), "dhis2": 70,
+                 "data_quality": b.get("data_generation", 55) * 0.9, "crvs": 35,
+                 "interoperability": 40, "dashboards": b.get("communication", 50),
+                 "data_use": b.get("communication", 50) * 0.95}.items():
+        b.setdefault(k, d)
     if baseline:
         b.update(baseline)
     n = BayesianNetwork("rhis")
-    for k in ("strategic_planning", "policy", "financing", "supervision",
-              "data_generation", "data_analysis", "communication"):
+    # governance sub-domains
+    for k in ("strategic_planning", "policy", "financing", "supervision"):
         n.add(Node(k, "subdomain", "continuous", b[k], lo=0, hi=100))
-    # governance is a composite of its sub-domains (weighted mean, identity link)
+    # data-generation sub-domains (routine reporting, DHIS2, data quality, CRVS, interoperability)
+    for k in ("routine_reporting", "dhis2", "data_quality", "crvs", "interoperability"):
+        n.add(Node(k, "subdomain", "continuous", b[k], lo=0, hi=100))
+    n.add(Node("data_analysis", "subdomain", "continuous", b["data_analysis"], lo=0, hi=100))
+    # communication/use sub-domains
+    for k in ("dashboards", "data_use"):
+        n.add(Node(k, "subdomain", "continuous", b[k], lo=0, hi=100))
+    # governance = weighted mean of its sub-domains
     n.add(Node("governance", "domain", "continuous", b["governance"], lo=0, hi=100,
                parents=[Edge("strategic_planning", 0.25, 0.02, +1, b["strategic_planning"], scale=1),
                         Edge("policy", 0.25, 0.02, +1, b["policy"], scale=1),
                         Edge("financing", 0.25, 0.02, +1, b["financing"], scale=1),
                         Edge("supervision", 0.25, 0.02, +1, b["supervision"], scale=1)]))
+    # data generation = weighted mean of its sub-domains
+    dg = b["data_generation"]
+    n.add(Node("data_generation", "domain", "continuous", dg, lo=0, hi=100,
+               parents=[Edge("routine_reporting", 0.24, 0.02, +1, b["routine_reporting"], scale=1),
+                        Edge("dhis2", 0.22, 0.02, +1, b["dhis2"], scale=1),
+                        Edge("data_quality", 0.24, 0.02, +1, b["data_quality"], scale=1),
+                        Edge("crvs", 0.16, 0.02, +1, b["crvs"], scale=1),
+                        Edge("interoperability", 0.14, 0.02, +1, b["interoperability"], scale=1)]))
+    # communication = weighted mean of dashboards + data use
+    n.add(Node("communication", "domain", "continuous", b["communication"], lo=0, hi=100,
+               parents=[Edge("dashboards", 0.5, 0.02, +1, b["dashboards"], scale=1),
+                        Edge("data_use", 0.5, 0.02, +1, b["data_use"], scale=1)]))
     # overall maturity index = weighted mean of the four domains
     n.add(Node("his_maturity_index", "outcome", "continuous", b["his_maturity_index"], lo=0, hi=100,
                noise_sd=0.0,
                parents=[Edge("governance", 0.25, 0.02, +1, b["governance"], scale=1),
-                        Edge("data_generation", 0.25, 0.02, +1, b["data_generation"], scale=1),
+                        Edge("data_generation", 0.25, 0.02, +1, dg, scale=1),
                         Edge("data_analysis", 0.25, 0.02, +1, b["data_analysis"], scale=1),
                         Edge("communication", 0.25, 0.02, +1, b["communication"], scale=1)]))
     return n
@@ -258,7 +293,9 @@ def build_uhc(baseline: dict | None = None) -> BayesianNetwork:
     b = {"sci": 0.50, "financial_protection": 0.55,
          "gov_health_expenditure": 0.40, "prepaid_coverage": 0.30, "out_of_pocket": 0.40,
          "service_readiness": 0.55, "workforce_density": 0.45, "medicine_availability": 0.60,
-         "his_maturity": 0.55, "governance": 0.50, "poverty": 0.40}
+         "his_maturity": 0.55, "governance": 0.50, "poverty": 0.40,
+         # tracer coverage groups that compose the service coverage index (WHO & World Bank 2023)
+         "rmnch_coverage": 0.55, "infectious_coverage": 0.50, "ncd_service_coverage": 0.40}
     if baseline:
         b.update(baseline)
     n = BayesianNetwork("uhc")
@@ -266,7 +303,8 @@ def build_uhc(baseline: dict | None = None) -> BayesianNetwork:
                      ("out_of_pocket", "financing"), ("service_readiness", "system"),
                      ("workforce_density", "system"), ("medicine_availability", "system"),
                      ("his_maturity", "system"), ("governance", "governance"),
-                     ("poverty", "socioeconomic")]:
+                     ("poverty", "socioeconomic"), ("rmnch_coverage", "intermediate"),
+                     ("infectious_coverage", "intermediate"), ("ncd_service_coverage", "intermediate")]:
         n.add(Node(k, layer, "prob", b[k], lo=0, hi=1))
     # service coverage index (fraction 0-1, logit link gives diminishing returns near saturation)
     n.add(Node("sci", "outcome", "prob", b["sci"], lo=0.05, hi=0.99, link="logit",
@@ -277,6 +315,9 @@ def build_uhc(baseline: dict | None = None) -> BayesianNetwork:
                         Edge("medicine_availability", 0.6, 0.10, +1, b["medicine_availability"]),
                         Edge("his_maturity", 0.5, 0.10, +1, b["his_maturity"]),
                         Edge("governance", 0.5, 0.10, +1, b["governance"]),
+                        Edge("rmnch_coverage", 0.9, 0.12, +1, b["rmnch_coverage"]),   # tracer group
+                        Edge("infectious_coverage", 0.8, 0.12, +1, b["infectious_coverage"]),
+                        Edge("ncd_service_coverage", 0.7, 0.12, +1, b["ncd_service_coverage"]),
                         Edge("out_of_pocket", 0.5, 0.10, -1, b["out_of_pocket"]),
                         Edge("poverty", 0.4, 0.10, -1, b["poverty"])]))
     # financial protection: rises with prepayment/coverage, falls with out-of-pocket
@@ -366,7 +407,11 @@ LEVER_SPECS = {
                 ("act", "ACT treatment access", "prob", True),
                 ("chemoprevention", "Chemoprevention (SMC/IPTp)", "prob", True),
                 ("rdt", "Rapid diagnostic tests", "prob", True),
-                ("housing", "Improved housing", "prob", True)],
+                ("vaccine", "Malaria vaccine (RTS,S/R21)", "prob", True),
+                ("larval_source_mgmt", "Larval source management", "prob", True),
+                ("care_seeking", "Prompt care-seeking", "prob", True),
+                ("housing", "Improved housing", "prob", True),
+                ("insecticide_resistance", "Insecticide resistance", "prob", False)],
     "ncd": [("tobacco", "Tobacco use", "prob", False),
             ("alcohol", "Harmful alcohol use", "prob", False),
             ("inactivity", "Physical inactivity", "prob", False),
@@ -386,10 +431,18 @@ LEVER_SPECS = {
              ("commodity", "Commodity availability", "prob", True),
              ("gender_inequality", "Gender inequality", "prob", False),
              ("adolescent_fertility", "Adolescent fertility", "prob", False)],
-    "rhis": [("governance", "Governance & leadership", "score", True),
-             ("data_generation", "Data generation & management", "score", True),
+    "rhis": [("strategic_planning", "Strategic planning", "score", True),
+             ("policy", "Policy & governance", "score", True),
+             ("financing", "HIS financing", "score", True),
+             ("supervision", "Supportive supervision", "score", True),
+             ("routine_reporting", "Routine reporting completeness", "score", True),
+             ("dhis2", "DHIS2 use", "score", True),
+             ("data_quality", "Data quality assurance", "score", True),
+             ("crvs", "CRVS functionality", "score", True),
+             ("interoperability", "Interoperability", "score", True),
              ("data_analysis", "Data analysis & synthesis", "score", True),
-             ("communication", "Communication & use", "score", True)],
+             ("dashboards", "Dashboards & visualisation", "score", True),
+             ("data_use", "Data use for decisions", "score", True)],
     "sdg3": [("uhc", "UHC service coverage", "prob", True),
              ("financial_protection", "Financial protection", "prob", True),
              ("health_expenditure", "Government health expenditure", "prob", True),
