@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.3.4] - 2026-07-05
+### Added
+- Missing-data imputation framework (warehouse/imputation.py): temporal interpolation
+  -> Bayesian MICE -> hierarchical shrinkage, multiple imputation with Rubin's-rules
+  pooling, plausibility bounds, provenance flagging, held-out validation and
+  self-calibrated intervals. Wired into scripts/mine_data.py; demo in
+  scripts/impute_demo.py; tests in tests/test_imputation.py (7/7).
+- Imputation methodology document (docs/IHSA_Missing_Data_Imputation_Framework.docx)
+  with MCAR/MAR/MNAR treatment, full derivations, Harvard citations and Figure 4.
+- Every module now carries >= 12 evidence-grounded, outcome-sensitive predictors:
+  HIV +key populations/PMTCT/harm reduction/gender inequality (12 levers);
+  maternal expanded to 12 (EmONC, blood, facility delivery, PNC, mCPR, workforce,
+  anaemia, adolescent fertility); malaria +vaccine/LSM/care-seeking/resistance (14);
+  RHIS decomposed into 12 PRISM/HIS sub-domain indicators; UHC +RMNCH/infectious/NCD
+  tracer coverage (13).
+- Predictor catalogue (docs/predictor_catalogue.csv) documenting each domain's
+  indicators, role, direction and evidence basis (163 rows).
+### Changed
+- mine_data.impute now uses the imputation framework instead of ad-hoc ffill/median.
+
+
 ## [0.3.3] - 2026-07-05
 ### Added
 - UHC registered as a full scenario (Universal Health Coverage Explorer) — 12 domains
