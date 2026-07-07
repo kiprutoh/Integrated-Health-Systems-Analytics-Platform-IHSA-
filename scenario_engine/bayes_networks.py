@@ -459,3 +459,76 @@ def default_baselines(dom: str, country: str | None = None) -> dict:
     """All node baselines for a domain (introspected from the built network)."""
     net = BUILDERS[dom](country) if dom == "rhis" else BUILDERS[dom]()
     return {name: node.baseline for name, node in net.nodes.items()}
+
+
+# ---------------------------------------------------- full-spec predictor augmentation
+from scenario_engine import predictor_spec as _SPEC  # noqa: E402
+
+
+def augment_from_spec(net: BayesianNetwork, domain: str, b: dict | None = None) -> BayesianNetwork:
+    """Add every predictor named in the enterprise spec (predictor_spec.SPEC) that is
+    not already in the network, wiring each as a modest-coefficient parent of the
+    outcome with the evidence-implied sign. Existing calibrated drivers are left
+    untouched (they are already parents), so scenario magnitudes are preserved while
+    the full predictor set is represented."""
+    b = b or {}
+    outcome = OUTCOME.get(domain)
+    if outcome is None or outcome not in net.nodes:
+        return net
+    onode = net.nodes[outcome]
+    for name, layer, direction in _SPEC.domain_predictors(domain):
+        if name in net.nodes or name == outcome:
+            continue                      # already modelled (calibrated driver / cascade node)
+        base = float(b.get(name, _SPEC.baseline_for(direction)))
+        if domain == "rhis":
+            net.add(Node(name, layer, "continuous", float(b.get(name, 50.0)), lo=0, hi=100))
+            scale = 30.0
+        else:
+            net.add(Node(name, layer, "prob", base, lo=0, hi=1))
+            scale = 0.30
+        sign = _SPEC.sign_for(domain, direction)
+        onode.parents.append(Edge(name, 0.22, 0.05, sign, net.nodes[name].baseline, scale=scale))
+    return net
+
+
+def _prettify(name: str) -> str:
+    special = {"itn": "ITN coverage", "irs": "Indoor residual spraying", "act": "ACT access",
+               "rdt": "Rapid diagnostic tests", "anc": "Antenatal care", "anc4": "Antenatal care (4+)",
+               "anc8": "Antenatal care (8+)", "hiv": "HIV prevalence", "tb": "TB burden",
+               "crvs": "CRVS functionality", "dhis2": "DHIS2 use", "emonc": "EmONC",
+               "pmtct": "PMTCT coverage", "sba": "Skilled birth attendance",
+               "dpt3": "DPT3/Penta coverage", "hpv_vaccine": "HPV vaccine coverage",
+               "itn_use": "ITN use (children)", "tpt": "TB preventive therapy",
+               "u5mr": "Under-5 mortality", "mmr": "Maternal mortality", "ncd": "NCD mortality",
+               "uhc": "UHC coverage"}
+    if name in special:
+        return special[name]
+    return name.replace("_", " ").replace("chw", "CHW").replace("his ", "HIS ").title()
+
+
+def full_lever_specs(domain: str) -> list[tuple]:
+    """Manual lever specs plus every spec predictor not already a lever, so the module
+    exposes the complete evidence-grounded predictor set as adjustable indicators."""
+    manual = list(LEVER_SPECS.get(domain, []))
+    seen = {k for k, *_ in manual}
+    kind = "score" if domain == "rhis" else "prob"
+    for name, layer, direction in _SPEC.domain_predictors(domain):
+        if name in seen or name == OUTCOME.get(domain):
+            continue
+        manual.append((name, _prettify(name), kind, direction == "good"))
+        seen.add(name)
+    return manual
+
+
+# auto-augment every Bayesian builder with the full spec predictor set
+def _wrap_builder(_dom, _fn):
+    def _b(*a, **k):
+        net = _fn(*a, **k)
+        base = k.get("baseline") or (a[0] if (a and isinstance(a[0], dict)) else
+                                     (a[1] if len(a) > 1 and isinstance(a[1], dict) else None))
+        return augment_from_spec(net, _dom, base)
+    _b.__name__ = getattr(_fn, "__name__", "build")
+    return _b
+
+
+BUILDERS = {_d: _wrap_builder(_d, _f) for _d, _f in BUILDERS.items()}

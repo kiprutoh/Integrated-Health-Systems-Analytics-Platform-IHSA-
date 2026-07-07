@@ -31,7 +31,11 @@ def test_u5mr_decomposition_coherent():
 def test_protective_levers_reduce_mortality():
     eng = ScenarioEngine(domain="under5")
     base = eng.model.baseline("Nigeria")
-    ov = {l.key: min(95, base.values.get(l.key, 0) + 20) for l in eng.model.levers}
+    # move each lever in its beneficial direction (raise protective, lower risk/shock)
+    ov = {}
+    for l in eng.model.levers:
+        cur = base.values.get(l.key, 0)
+        ov[l.key] = min(95, cur + 20) if l.polarity <= 0 else max(0, cur - 20)
     r = eng.run("Nigeria", ov)
     assert r.scenario_outcome["u5mr"] < r.baseline_outcome["u5mr"]
 
