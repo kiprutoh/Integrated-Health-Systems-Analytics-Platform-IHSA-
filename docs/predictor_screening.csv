@@ -1,0 +1,252 @@
+domain,predictor,label,outcome_at_min,outcome_at_max,baseline,effect,status
+child,malaria,Malaria,7.63,11.38,8.6,0.436047,effective
+child,pneumonia,Pneumonia,7.63,11.38,8.6,0.436047,effective
+child,diarrhoea,Diarrhoea,7.63,11.38,8.6,0.436047,effective
+child,travel_time,Travel time to care,7.63,11.38,8.6,0.436047,effective
+child,nutrition,Nutrition,10.72,7.18,8.6,0.411628,effective
+child,water,Safe water,10.72,7.18,8.6,0.411628,effective
+child,sanitation,Sanitation,10.72,7.18,8.6,0.411628,effective
+child,maternal_education,Maternal education,10.72,7.18,8.6,0.411628,effective
+child,facility_readiness,Facility readiness,10.72,7.18,8.6,0.411628,effective
+child,chw_density,Community health workers,10.72,7.18,8.6,0.411628,effective
+child,ors_zinc,ORS + zinc (diarrhoea),8.6,8.08,8.6,0.060465,effective
+child,exclusive_bf,Exclusive breastfeeding,8.6,8.16,8.6,0.051163,effective
+child,careseeking_pneumonia,Pneumonia careseeking,8.6,8.24,8.6,0.04186,effective
+child,itn_use,ITN use (malaria),8.6,8.26,8.6,0.039535,effective
+child,vitamin_a,Vitamin A,8.6,8.37,8.6,0.026744,effective
+child,rota,Rotavirus vaccine,8.6,8.38,8.6,0.025581,effective
+child,pcv,PCV (pneumococcal),8.6,8.4,8.6,0.023256,effective
+child,measles,Measles immunisation,8.6,8.46,8.6,0.016279,effective
+child,dtp3,DTP3 immunisation,8.6,8.52,8.6,0.009302,effective
+hiv,viral_suppression,Viral suppression (95-95-95 end-point),2.3714,0.0949,0.557,4.087074,effective
+hiv,condom_use,Condom use,0.9806,0.1961,0.557,1.408438,effective
+hiv,sti_prevalence,STI prevalence,0.4207,0.9255,0.557,0.906284,effective
+hiv,conflict,Conflict,0.557,0.8309,0.557,0.491741,effective
+hiv,covid,COVID disruption,0.557,0.8309,0.557,0.491741,effective
+hiv,floods,Floods,0.557,0.8309,0.557,0.491741,effective
+hiv,drug_stockouts,Drug stockouts,0.557,0.8309,0.557,0.491741,effective
+hiv,refugee_influx,Refugee influx,0.557,0.8309,0.557,0.491741,effective
+hiv,stockout_rates,Stockout rates,0.494,0.737,0.557,0.436266,effective
+hiv,adolescent_fertility,Adolescent fertility,0.494,0.737,0.557,0.436266,effective
+hiv,tb_incidence,TB incidence,0.494,0.737,0.557,0.436266,effective
+hiv,malaria_prevalence,Malaria prevalence,0.494,0.737,0.557,0.436266,effective
+hiv,hepatitis,Hepatitis,0.494,0.737,0.557,0.436266,effective
+hiv,urbanization,Urbanization,0.494,0.737,0.557,0.436266,effective
+hiv,migration,Migration,0.494,0.737,0.557,0.436266,effective
+hiv,youth_unemployment,Youth unemployment,0.494,0.737,0.557,0.436266,effective
+hiv,travel_time,Travel time to care,0.494,0.737,0.557,0.436266,effective
+hiv,workforce_density,Health-workforce density,0.6941,0.4652,0.557,0.410952,effective
+hiv,lab_capacity,Laboratory capacity,0.6941,0.4652,0.557,0.410952,effective
+hiv,viral_load_testing,Viral-load testing,0.6941,0.4652,0.557,0.410952,effective
+hiv,chw_density,Community health workers,0.6941,0.4652,0.557,0.410952,effective
+hiv,contraceptive_prevalence,Contraceptive prevalence,0.6941,0.4652,0.557,0.410952,effective
+hiv,anc_attendance,ANC attendance,0.6941,0.4652,0.557,0.410952,effective
+hiv,facility_delivery,Facility delivery,0.6941,0.4652,0.557,0.410952,effective
+hiv,skilled_birth_attendance,Skilled birth attendance,0.6941,0.4652,0.557,0.410952,effective
+hiv,income,Household income,0.6941,0.4652,0.557,0.410952,effective
+hiv,internet_connectivity,Internet connectivity,0.6941,0.4652,0.557,0.410952,effective
+hiv,facility_density,Facility density,0.6941,0.4652,0.557,0.410952,effective
+hiv,electricity,Electricity access,0.6941,0.4652,0.557,0.410952,effective
+hiv,health_expenditure,Health expenditure,0.6941,0.4652,0.557,0.410952,effective
+hiv,reporting_completeness,Reporting completeness,0.6941,0.4652,0.557,0.410952,effective
+hiv,digital_maturity,Digital maturity,0.6941,0.4652,0.557,0.410952,effective
+hiv,his_maturity,HIS maturity,0.6941,0.4652,0.557,0.410952,effective
+hiv,supply_chain,Supply-chain efficiency,0.6941,0.4652,0.557,0.410952,effective
+hiv,vmmc_coverage,VMMC coverage,0.6585,0.461,0.557,0.354578,effective
+hiv,key_pop_coverage,Key-population service coverage,0.6439,0.4508,0.557,0.346679,effective
+hiv,gender_inequality,Gender inequality index,0.4548,0.6367,0.557,0.326571,effective
+hiv,prep_coverage,PrEP coverage,0.5772,0.482,0.557,0.170916,effective
+hiv,female_literacy,Female literacy,0.621,0.5278,0.557,0.167325,effective
+hiv,harm_reduction_coverage,Harm reduction (NSP/OAT),0.5787,0.4919,0.557,0.155835,effective
+hiv,pmtct_coverage,PMTCT coverage,0.6068,0.5461,0.557,0.108977,effective
+malaria,itn,ITN coverage / use,397.705,97.889,159.341,1.8816,effective
+malaria,travel_time,Travel Time,127.927,268.622,159.341,0.882981,effective
+malaria,temperature,Temperature,128.102,267.662,159.341,0.875857,effective
+malaria,chemoprevention,Chemoprevention (SMC/IPTp),216.403,79.84,159.341,0.857049,effective
+malaria,supply_chain,Supply Chain,260.599,129.187,159.341,0.824722,effective
+malaria,surveillance,Surveillance,239.717,114.775,159.341,0.784117,effective
+malaria,floods,Floods,159.341,283.098,159.341,0.77668,effective
+malaria,chw_density,Chw Density,238.623,115.222,159.341,0.774446,effective
+malaria,irs,Indoor residual spraying,193.983,78.728,159.341,0.723323,effective
+malaria,insecticide_resistance,Insecticide resistance,137.426,225.873,159.341,0.55508,effective
+malaria,act,ACT treatment access,212.153,128.707,159.341,0.523694,effective
+malaria,care_seeking,Prompt care-seeking,204.427,137.047,159.341,0.422867,effective
+malaria,vaccine,"Malaria vaccine (RTS,S/R21)",169.176,103.287,159.341,0.413509,effective
+malaria,housing,Improved housing,190.454,127.831,159.341,0.393012,effective
+malaria,larval_source_mgmt,Larval source management,170.267,114.611,159.341,0.349289,effective
+maternal,emonc,Emergency obstetric & newborn care,688.1,207.3,401.0,1.199002,effective
+maternal,sba,Skilled birth attendance,661.1,243.2,401.0,1.042145,effective
+maternal,facility_delivery,Facility delivery,581.7,319.2,401.0,0.654613,effective
+maternal,female_literacy,Female literacy,538.1,295.3,401.0,0.605486,effective
+maternal,mcpr,Modern contraceptive prevalence,480.1,263.5,401.0,0.54015,effective
+maternal,anaemia,Maternal anaemia prevalence,328.3,541.3,401.0,0.531172,effective
+maternal,conflict,Conflict,401.0,598.2,401.0,0.491771,effective
+maternal,floods,Floods,401.0,598.2,401.0,0.491771,effective
+maternal,drug_shortages,Drug shortages,401.0,598.2,401.0,0.491771,effective
+maternal,workforce_strikes,Workforce strikes,401.0,598.2,401.0,0.491771,effective
+maternal,fertility,Total fertility rate,310.4,501.7,401.0,0.477057,effective
+maternal,hiv,HIV prevalence,355.7,530.6,401.0,0.43616,effective
+maternal,malaria,Malaria,355.7,530.6,401.0,0.43616,effective
+maternal,hypertension,Hypertension,355.7,530.6,401.0,0.43616,effective
+maternal,diabetes,Diabetes,355.7,530.6,401.0,0.43616,effective
+maternal,poverty,Poverty,355.7,530.6,401.0,0.43616,effective
+maternal,gender_inequality,Gender inequality,355.7,530.6,401.0,0.43616,effective
+maternal,rural_population,Rural population,355.7,530.6,401.0,0.43616,effective
+maternal,travel_time,Travel time to care,355.7,530.6,401.0,0.43616,effective
+maternal,blood_availability,Blood availability,499.7,334.9,401.0,0.410973,effective
+maternal,referral_efficiency,Referral efficiency,499.7,334.9,401.0,0.410973,effective
+maternal,caesarean_rate,Caesarean section rate,499.7,334.9,401.0,0.410973,effective
+maternal,health_workforce,Health workforce,499.7,334.9,401.0,0.410973,effective
+maternal,anc8,Antenatal care (8+),499.7,334.9,401.0,0.410973,effective
+maternal,birth_spacing,Birth spacing,499.7,334.9,401.0,0.410973,effective
+maternal,road_access,Road access,499.7,334.9,401.0,0.410973,effective
+maternal,ambulances,Ambulance availability,499.7,334.9,401.0,0.410973,effective
+maternal,facility_density,Facility density,499.7,334.9,401.0,0.410973,effective
+maternal,maternal_death_reviews,Maternal death reviews,499.7,334.9,401.0,0.410973,effective
+maternal,government_expenditure,Government expenditure,499.7,334.9,401.0,0.410973,effective
+maternal,reporting_completeness,Reporting completeness,499.7,334.9,401.0,0.410973,effective
+maternal,anc4,Antenatal care (4+),476.3,319.2,401.0,0.391771,effective
+maternal,midwife_density,Skilled-workforce density,470.6,315.4,401.0,0.387032,effective
+maternal,postnatal_care,Postnatal care,472.9,350.4,401.0,0.305486,effective
+maternal,adolescent_fertility,Adolescent fertility rate,370.2,434.4,401.0,0.1601,effective
+ncd,tobacco,Tobacco use,0.113,0.24,0.126,1.007937,effective
+ncd,smoking,Smoking,0.104,0.195,0.126,0.722222,effective
+ncd,diet,Diet,0.104,0.195,0.126,0.722222,effective
+ncd,health_insurance,Health Insurance,0.178,0.094,0.126,0.666667,effective
+ncd,telemedicine,Telemedicine,0.178,0.094,0.126,0.666667,effective
+ncd,htn_control,Hypertension control,0.145,0.065,0.126,0.634921,effective
+ncd,obesity,Obesity,0.118,0.197,0.126,0.626984,effective
+ncd,salt_diet,High-salt diet,0.102,0.172,0.126,0.555556,effective
+ncd,primary_care_readiness,Primary-care readiness,0.17,0.101,0.126,0.547619,effective
+ncd,alcohol,Harmful alcohol use,0.121,0.186,0.126,0.515873,effective
+ncd,inactivity,Physical inactivity,0.113,0.174,0.126,0.484127,effective
+ncd,diabetes_control,Diabetes control,0.144,0.085,0.126,0.468254,effective
+ncd,medicine_availability,Essential-medicine availability,0.169,0.11,0.126,0.468254,effective
+ncd,screening,NCD screening,0.144,0.093,0.126,0.404762,effective
+ncd,urbanization,Urbanization,0.112,0.145,0.126,0.261905,effective
+neonatal,maternal_age,Maternal age (extremes),12.24,18.26,13.8,0.436232,effective
+neonatal,prematurity,Prematurity,12.24,18.26,13.8,0.436232,effective
+neonatal,low_birth_weight,Low birth weight,12.24,18.26,13.8,0.436232,effective
+neonatal,facility_delivery,Facility delivery,17.2,11.53,13.8,0.41087,effective
+neonatal,emonc,EmONC,17.2,11.53,13.8,0.41087,effective
+neonatal,anc,Antenatal care,17.2,11.53,13.8,0.41087,effective
+neonatal,caesarean_availability,Caesarean availability,17.2,11.53,13.8,0.41087,effective
+neonatal,referral_efficiency,Referral efficiency,17.2,11.53,13.8,0.41087,effective
+neonatal,electricity,Electricity access,17.2,11.53,13.8,0.41087,effective
+neonatal,oxygen,Medical oxygen,17.2,11.53,13.8,0.41087,effective
+neonatal,blood_availability,Blood availability,17.2,11.53,13.8,0.41087,effective
+neonatal,digital_surveillance,Digital surveillance,17.2,11.53,13.8,0.41087,effective
+neonatal,kangaroo_mother_care,Kangaroo mother care,13.8,12.66,13.8,0.082609,effective
+neonatal,neonatal_sepsis_mgmt,Neonatal sepsis management,13.8,12.9,13.8,0.065217,effective
+neonatal,neonatal_resuscitation,Newborn resuscitation,13.8,13.18,13.8,0.044928,effective
+neonatal,sba,Skilled birth attendance,13.8,13.32,13.8,0.034783,effective
+neonatal,pnc,Postnatal care,13.8,13.39,13.8,0.02971,effective
+rhis,data_analysis,Data analysis & synthesis,48.713,73.687,61.2,0.408072,effective
+rhis,dashboards,Dashboards & visualisation,54.685,67.214,61.2,0.204722,effective
+rhis,data_use,Data use for decisions,55.018,67.532,61.2,0.204477,effective
+rhis,supervision,Supportive supervision,56.385,62.638,61.2,0.102173,effective
+rhis,policy,Policy & governance,59.951,66.194,61.2,0.10201,effective
+rhis,strategic_planning,Strategic planning,57.9,64.127,61.2,0.101748,effective
+rhis,financing,HIS financing,59.957,66.173,61.2,0.101569,effective
+rhis,routine_reporting,Routine reporting completeness,57.456,63.475,61.2,0.09835,effective
+rhis,data_quality,Data quality assurance,57.836,63.845,61.2,0.098186,effective
+rhis,dhis2,DHIS2 use,57.342,62.854,61.2,0.090065,effective
+rhis,crvs,CRVS functionality,59.798,63.803,61.2,0.065441,effective
+rhis,interoperability,Interoperability,59.799,63.302,61.2,0.057239,effective
+sdg3,uhc,UHC service coverage,0.235,0.601,0.42,0.871429,effective
+sdg3,health_expenditure,Government health expenditure,0.33,0.571,0.42,0.57381,effective
+sdg3,financial_protection,Financial protection,0.311,0.5,0.42,0.45,effective
+sdg3,digital_health,Digital Health,0.327,0.502,0.42,0.416667,effective
+sdg3,governance,Governance,0.346,0.49,0.42,0.342857,effective
+sdg3,conflict,Conflict,0.42,0.286,0.42,0.319048,effective
+sdg3,his_maturity,HIS maturity,0.347,0.479,0.42,0.314286,effective
+srhr,family_planning,Modern contraception (FP),0.486,0.758,0.628,0.433121,effective
+srhr,gender_inequality,Gender inequality,0.705,0.518,0.628,0.297771,effective
+srhr,adolescent_fertility,Adolescent fertility,0.645,0.474,0.628,0.272293,effective
+srhr,health_workforce,Health Workforce,0.53,0.701,0.628,0.272293,effective
+srhr,skilled_attendance,Skilled attendance,0.51,0.677,0.628,0.265924,effective
+srhr,anc,Antenatal care,0.54,0.704,0.628,0.261146,effective
+srhr,education,Girls' education,0.529,0.671,0.628,0.226115,effective
+srhr,gbv_services,GBV services,0.592,0.684,0.628,0.146497,effective
+srhr,commodity,Commodity availability,0.576,0.644,0.628,0.10828,effective
+srhr,youth_services,Youth-friendly services,0.61,0.651,0.628,0.065287,effective
+tb,hiv_prevalence,Hiv Prevalence,99.04,221.973,107.254,1.146186,effective
+tb,smoking,Smoking,86.038,181.086,107.254,0.886195,effective
+tb,poverty,Poverty,86.102,180.849,107.254,0.883389,effective
+tb,overcrowding,Overcrowding,86.132,180.626,107.254,0.88103,effective
+tb,diabetes,Diabetes,86.228,180.163,107.254,0.875818,effective
+tb,contact_tracing,Contact Tracing,161.569,77.185,107.254,0.786768,effective
+tb,laboratory_network,Laboratory Network,160.624,77.556,107.254,0.774498,effective
+tb,nutrition,Nutrition,160.462,77.609,107.254,0.772493,effective
+tb,undernutrition,Undernutrition,97.099,160.601,107.254,0.592071,effective
+tb,tpt,TB preventive therapy,137.884,75.855,107.254,0.578337,effective
+tb,art_coverage,ART coverage (HIV/TB),151.652,101.113,107.254,0.471209,effective
+tb,genexpert,GeneXpert / diagnostic access,129.627,98.041,107.254,0.294497,effective
+tb,community_screening,Community screening,120.157,96.746,107.254,0.218276,effective
+tb,drug_availability,Drug availability,127.622,104.573,107.254,0.214901,effective
+tb,his_maturity,His Maturity,114.09,102.287,107.254,0.110047,effective
+tb,digital_adherence,Digital adherence support,111.445,103.352,107.254,0.075456,effective
+uhc,service_readiness,Service readiness,0.485,0.718,0.617,0.377634,effective
+uhc,gov_health_expenditure,Government health expenditure,0.525,0.731,0.617,0.333874,effective
+uhc,workforce_density,Health-workforce density,0.532,0.718,0.617,0.301459,effective
+uhc,zero_dose_children,Zero Dose Children,0.667,0.49,0.617,0.286872,effective
+uhc,donor_dependency,Donor Dependency,0.667,0.491,0.617,0.285251,effective
+uhc,vulnerable_populations,Vulnerable Populations,0.667,0.491,0.617,0.285251,effective
+uhc,dpt3,DPT3/Penta coverage,0.517,0.692,0.617,0.28363,effective
+uhc,contraceptive_prevalence,Contraceptive Prevalence,0.517,0.692,0.617,0.28363,effective
+uhc,chw_density,Chw Density,0.517,0.692,0.617,0.28363,effective
+uhc,electricity,Electricity,0.517,0.692,0.617,0.28363,effective
+uhc,stockout_rates,Stockout Rates,0.667,0.492,0.617,0.28363,effective
+uhc,measles,Measles,0.518,0.691,0.617,0.280389,effective
+uhc,full_immunization,Full Immunization,0.518,0.691,0.617,0.280389,effective
+uhc,skilled_birth_attendance,Skilled Birth Attendance,0.518,0.691,0.617,0.280389,effective
+uhc,anc4,Antenatal care (4+),0.518,0.691,0.617,0.280389,effective
+uhc,cervical_screening,Cervical Screening,0.518,0.691,0.617,0.280389,effective
+uhc,tb_treatment_success,Tb Treatment Success,0.518,0.691,0.617,0.280389,effective
+uhc,itn_use,ITN use (children),0.518,0.691,0.617,0.280389,effective
+uhc,hypertension_treatment,Hypertension Treatment,0.518,0.691,0.617,0.280389,effective
+uhc,diabetes_treatment,Diabetes Treatment,0.518,0.691,0.617,0.280389,effective
+uhc,surgical_access,Surgical Access,0.518,0.691,0.617,0.280389,effective
+uhc,nutrition_services,Nutrition Services,0.518,0.691,0.617,0.280389,effective
+uhc,essential_equipment,Essential Equipment,0.518,0.691,0.617,0.280389,effective
+uhc,diagnostic_services,Diagnostic Services,0.518,0.691,0.617,0.280389,effective
+uhc,infection_prevention,Infection Prevention,0.518,0.691,0.617,0.280389,effective
+uhc,core_workforce_density,Core Workforce Density,0.518,0.691,0.617,0.280389,effective
+uhc,bed_density,Bed Density,0.518,0.691,0.617,0.280389,effective
+uhc,water_sanitation,Water Sanitation,0.518,0.691,0.617,0.280389,effective
+uhc,lab_capacity,Lab Capacity,0.518,0.691,0.617,0.280389,effective
+uhc,policy_implementation,Policy Implementation,0.518,0.691,0.617,0.280389,effective
+uhc,education,Education,0.518,0.691,0.617,0.280389,effective
+uhc,institutional_delivery,Institutional Delivery,0.519,0.691,0.617,0.278768,effective
+uhc,art_coverage,Art Coverage,0.519,0.691,0.617,0.278768,effective
+uhc,urbanization,Urbanization,0.519,0.691,0.617,0.278768,effective
+uhc,hpv_vaccine,HPV vaccine coverage,0.519,0.69,0.617,0.277147,effective
+uhc,care_seeking,Care Seeking,0.519,0.69,0.617,0.277147,effective
+uhc,facility_density,Facility Density,0.519,0.69,0.617,0.277147,effective
+uhc,emr_adoption,Emr Adoption,0.52,0.69,0.617,0.275527,effective
+uhc,prepaid_coverage,Prepaid/pooled coverage,0.577,0.734,0.617,0.254457,effective
+uhc,medicine_availability,Essential-medicine availability,0.522,0.666,0.617,0.233387,effective
+uhc,his_maturity,HIS maturity,0.543,0.662,0.617,0.192869,effective
+uhc,out_of_pocket,Out-of-pocket share,0.661,0.542,0.617,0.192869,effective
+uhc,governance,Governance,0.545,0.663,0.617,0.191248,effective
+uhc,poverty,Poverty,0.651,0.557,0.617,0.15235,effective
+under5,conflict,Conflict,22.4,33.42,22.4,0.491964,effective
+under5,floods,Floods,22.4,33.42,22.4,0.491964,effective
+under5,disease_burden,Disease burden,19.87,29.64,22.4,0.436161,effective
+under5,household_poverty,Household poverty,19.87,29.64,22.4,0.436161,effective
+under5,nutrition,Nutrition,27.91,18.71,22.4,0.410714,effective
+under5,health_system_readiness,Health-system readiness,27.91,18.71,22.4,0.410714,effective
+under5,kangaroo_mother_care,Kangaroo mother care,22.4,21.26,22.4,0.050893,effective
+under5,neonatal_sepsis_mgmt,Neonatal sepsis management,22.4,21.5,22.4,0.040179,effective
+under5,neonatal_resuscitation,Newborn resuscitation,22.4,21.78,22.4,0.027679,effective
+under5,ors_zinc,ORS + zinc (diarrhoea),22.4,21.88,22.4,0.023214,effective
+under5,sba,Skilled birth attendance,22.4,21.92,22.4,0.021429,effective
+under5,exclusive_bf,Exclusive breastfeeding,22.4,21.96,22.4,0.019643,effective
+under5,pnc,Postnatal care,22.4,21.99,22.4,0.018304,effective
+under5,careseeking_pneumonia,Pneumonia careseeking,22.4,22.04,22.4,0.016071,effective
+under5,itn_use,ITN use (malaria),22.4,22.06,22.4,0.015179,effective
+under5,vitamin_a,Vitamin A,22.4,22.17,22.4,0.010268,effective
+under5,rota,Rotavirus vaccine,22.4,22.18,22.4,0.009821,effective
+under5,pcv,PCV (pneumococcal),22.4,22.2,22.4,0.008929,effective
+under5,measles,Measles immunisation,22.4,22.26,22.4,0.00625,effective
+under5,dtp3,DTP3 immunisation,22.4,22.32,22.4,0.003571,effective

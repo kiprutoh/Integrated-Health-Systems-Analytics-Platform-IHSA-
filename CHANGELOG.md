@@ -1,5 +1,23 @@
 # Changelog
 
+## [0.3.6] - 2026-07-06
+### Added
+- Predictor sensitivity screening (scripts/screen_predictors.py): one-at-a-time
+  range-sweep of every predictor, effect = normalised outcome swing, threshold 1e-3.
+  Writes docs/predictor_screening.csv. Variable Screening Report documents the process.
+### Changed
+- Do-operator semantics corrected: the scenario engine now intervenes only on levers
+  changed from baseline, so mediators are not fixed and upstream predictors keep their
+  causal path (analytics/bayesian/model.py). This recovered several wrongly-inert
+  predictors (e.g. SRHR commodity, youth services).
+- Final variable set: 251 effective adjustable variables, zero inert. Removed as
+  redundant/unwired: HIV know-status & ART coverage (act via viral suppression);
+  malaria RDT & rainfall; NCD digital follow-up; RHIS population surveys; SRHR facility
+  delivery, PMTCT, digital SRHR. SDG 3 constituent outcomes reclassified as
+  model-linked inputs (kept as nodes, removed as sliders). See EXCLUDE_LEVERS.
+- Definitive methodology updated with a screening note in the predictor section.
+
+
 ## [0.3.5] - 2026-07-06
 ### Added
 - Full enterprise predictor spec encoded as a single source of truth

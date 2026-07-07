@@ -82,9 +82,14 @@ class BayesianScenarioModel(ScenarioModel):
 
     def simulate(self, state: State) -> Outcome:
         net = self._build_net(state.country)
+        base = self.baseline(state.country).values
+        # do-operator semantics: intervene ONLY on levers the caller actually changed
+        # from baseline. Levers left at baseline are NOT fixed, so mediators (e.g. a
+        # coverage node driven by upstream levers) remain free to respond — otherwise
+        # fixing a mediator would sever the causal path from its own parents.
         interventions = {}
         for k, _lbl, kind, _i in self._lever_meta:
-            if k in state.values:
+            if k in state.values and abs(state.values[k] - base.get(k, state.values[k])) > 1e-9:
                 interventions[k] = state.values[k] / 100 if kind == "prob" else state.values[k]
         samples = net.sample(N_SAMPLES, interventions=interventions or None, seed=11)
         s = net.summarise(self._outcome_node, samples)

@@ -65,9 +65,11 @@ class HIVScenarioModel(ScenarioModel):
     primary_outcome = "hiv_incidence"
 
     levers = [
-        LeverSpec("pct_know_status", "Know status (1st 95)", "%", 0, 100, 1),
-        LeverSpec("art_coverage", "ART coverage (2nd 95)", "%", 0, 100, 1),
-        LeverSpec("viral_suppression", "Viral suppression (3rd 95)", "%", 0, 100, 1),
+        # 1st/2nd 95s (know-status, ART coverage) act only through population viral
+        # suppression, which is the retained lever; the OAT screen showed they have no
+        # independent effect on incidence, so they are kept as baseline inputs (used by
+        # the force-of-infection anchor) but not exposed as separate sliders.
+        LeverSpec("viral_suppression", "Viral suppression (95-95-95 end-point)", "%", 0, 100, 1),
         LeverSpec("condom_use", "Condom use", "%", 0, 100, 1),
         LeverSpec("vmmc_coverage", "VMMC coverage", "%", 0, 100, 1),
         LeverSpec("prep_coverage", "PrEP coverage", "%", 0, 30, 0.5),

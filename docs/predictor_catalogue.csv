@@ -25,9 +25,7 @@ child,neonatal_resuscitation,Neonatal Resuscitation,context,False,—,Evidence-g
 child,kangaroo_mother_care,Kangaroo Mother Care,context,False,—,Evidence-grounded determinant
 child,neonatal_sepsis_mgmt,Neonatal Sepsis Mgmt,context,False,—,Evidence-grounded determinant
 child,pnc,Pnc,context,False,—,Evidence-grounded determinant
-hiv,pct_know_status,Know status (1st 95),predictor,True,protective/up,"Testing, 1st 95 (UNAIDS, 2023)"
-hiv,art_coverage,ART coverage (2nd 95),predictor,True,protective/up,"ART cascade, 2nd 95 (UNAIDS, 2023)"
-hiv,viral_suppression,Viral suppression (3rd 95),predictor,True,protective/up,"Treatment-as-prevention; U=U (Cohen et al., 2011; Rodger et al., 2019)"
+hiv,viral_suppression,Viral suppression (95-95-95 end-point),predictor,True,protective/up,"Treatment-as-prevention; U=U (Cohen et al., 2011; Rodger et al., 2019)"
 hiv,condom_use,Condom use,predictor,True,protective/up,"~80% per-act reduction (Weller & Davis, 2002)"
 hiv,vmmc_coverage,VMMC coverage,predictor,True,protective/up,~60% acquisition reduction (Auvert 2005; Bailey 2007; Gray 2007)
 hiv,prep_coverage,PrEP coverage,predictor,True,protective/up,"~55% population effect, adherence-scaled (WHO, 2016)"
@@ -69,18 +67,20 @@ hiv,floods,Floods,predictor,True,risk/down,Evidence-grounded determinant
 hiv,drug_stockouts,Drug stockouts,predictor,True,risk/down,Evidence-grounded determinant
 hiv,refugee_influx,Refugee influx,predictor,True,risk/down,Evidence-grounded determinant
 hiv,hiv_prevalence,Hiv Prevalence,context,False,—,Evidence-grounded determinant
+hiv,pct_know_status,Pct Know Status,context,False,—,"Testing, 1st 95 (UNAIDS, 2023)"
+hiv,art_coverage,Art Coverage,context,False,—,"ART cascade, 2nd 95 (UNAIDS, 2023)"
 malaria,itn,ITN coverage / use,intermediate,True,protective/up,"~50% clinical reduction (Lengeler, 2004)"
 malaria,irs,Indoor residual spraying,intermediate,True,protective/up,"Vectorial-capacity reduction (WHO, 2023b)"
 malaria,act,ACT treatment access,intermediate,True,protective/up,"Artemisinin combination therapy (WHO, 2023b)"
 malaria,chemoprevention,Chemoprevention (SMC/IPTp),intermediate,True,protective/up,"SMC/IPTp (WHO, 2023b)"
-malaria,rdt,Rapid diagnostic tests,intermediate,True,protective/up,Evidence-grounded determinant
+malaria,rdt,Rdt,intermediate,False,—,Evidence-grounded determinant
 malaria,vaccine,"Malaria vaccine (RTS,S/R21)",intermediate,True,protective/up,"RTS,S/R21 vaccines (WHO, 2023b)"
 malaria,larval_source_mgmt,Larval source management,intermediate,True,protective/up,"Supplementary vector control (WHO, 2013)"
 malaria,care_seeking,Prompt care-seeking,intermediate,True,protective/up,"Prompt treatment (WHO, 2023b)"
 malaria,insecticide_resistance,Insecticide resistance,risk,True,risk/down,"Erodes ITN/IRS effect (WHO, 2023b)"
 malaria,housing,Improved housing,socioeconomic,True,protective/up,"Improved housing lowers exposure (Tusting et al., 2015)"
 malaria,his_maturity,His Maturity,system,False,—,Evidence-grounded determinant
-malaria,rainfall,Rainfall,shock,True,risk/down,Evidence-grounded determinant
+malaria,rainfall,Rainfall,shock,False,—,Evidence-grounded determinant
 malaria,floods,Floods,shock,True,risk/down,Evidence-grounded determinant
 malaria,supply_chain,Supply Chain,system,True,protective/up,Evidence-grounded determinant
 malaria,temperature,Temperature,shock,True,risk/down,Evidence-grounded determinant
@@ -132,7 +132,7 @@ ncd,diabetes_control,Diabetes control,intermediate,True,protective/up,Evidence-g
 ncd,screening,NCD screening,intermediate,True,protective/up,Evidence-grounded determinant
 ncd,primary_care_readiness,Primary-care readiness,system,True,protective/up,Evidence-grounded determinant
 ncd,medicine_availability,Essential-medicine availability,system,True,protective/up,Evidence-grounded determinant
-ncd,digital_followup,Digital Followup,system,True,protective/up,Evidence-grounded determinant
+ncd,digital_followup,Digital Followup,system,False,—,Evidence-grounded determinant
 ncd,urbanization,Urbanization,socioeconomic,True,risk/down,Evidence-grounded determinant
 ncd,insurance,Insurance,socioeconomic,False,—,Evidence-grounded determinant
 ncd,smoking,Smoking,risk,True,risk/down,Evidence-grounded determinant
@@ -181,28 +181,28 @@ rhis,data_use,Data use for decisions,subdomain,True,protective/up,Evidence-groun
 rhis,governance,Governance,domain,False,—,Evidence-grounded determinant
 rhis,data_generation,Data Generation,domain,False,—,Evidence-grounded determinant
 rhis,communication,Communication,domain,False,—,Evidence-grounded determinant
-sdg3,mmr,Maternal mortality,outcome-parent,True,risk/down,Evidence-grounded determinant
-sdg3,u5mr,Under-5 mortality,outcome-parent,True,risk/down,Evidence-grounded determinant
-sdg3,hiv_incidence,Hiv Incidence,outcome-parent,True,risk/down,Evidence-grounded determinant
-sdg3,tb,TB burden,outcome-parent,True,risk/down,Evidence-grounded determinant
-sdg3,malaria,Malaria,outcome-parent,True,risk/down,Evidence-grounded determinant
-sdg3,ncd,NCD mortality,outcome-parent,True,risk/down,Evidence-grounded determinant
+sdg3,mmr,Mmr,outcome-parent,False,—,Evidence-grounded determinant
+sdg3,u5mr,U5Mr,outcome-parent,False,—,Evidence-grounded determinant
+sdg3,hiv_incidence,Hiv Incidence,outcome-parent,False,—,Evidence-grounded determinant
+sdg3,tb,Tb,outcome-parent,False,—,Evidence-grounded determinant
+sdg3,malaria,Malaria,outcome-parent,False,—,Evidence-grounded determinant
+sdg3,ncd,Ncd,outcome-parent,False,—,Evidence-grounded determinant
 sdg3,uhc,UHC service coverage,enabler,True,protective/up,Evidence-grounded determinant
 sdg3,financial_protection,Financial protection,enabler,True,protective/up,Evidence-grounded determinant
 sdg3,health_expenditure,Government health expenditure,enabler,True,protective/up,Evidence-grounded determinant
 sdg3,his_maturity,HIS maturity,enabler,True,protective/up,Evidence-grounded determinant
 sdg3,governance,Governance,enabler,True,protective/up,Evidence-grounded determinant
 sdg3,conflict,Conflict,shock,True,risk/down,Evidence-grounded determinant
-sdg3,neonatal_mortality,Neonatal Mortality,outcome-parent,True,risk/down,Evidence-grounded determinant
+sdg3,neonatal_mortality,Neonatal Mortality,outcome-parent,False,—,Evidence-grounded determinant
 sdg3,digital_health,Digital Health,enabler,True,protective/up,Evidence-grounded determinant
 srhr,anc,Antenatal care,intermediate,True,protective/up,Evidence-grounded determinant
-srhr,facility_delivery,Facility Delivery,intermediate,True,protective/up,"Institutional delivery (WHO MMEIG, 2023)"
+srhr,facility_delivery,Facility Delivery,intermediate,False,—,"Institutional delivery (WHO MMEIG, 2023)"
 srhr,skilled_attendance,Skilled attendance,intermediate,True,protective/up,Evidence-grounded determinant
-srhr,pmtct,PMTCT coverage,intermediate,True,protective/up,Evidence-grounded determinant
+srhr,pmtct,Pmtct,intermediate,False,—,Evidence-grounded determinant
 srhr,youth_services,Youth-friendly services,system,True,protective/up,Evidence-grounded determinant
 srhr,gbv_services,GBV services,system,True,protective/up,Evidence-grounded determinant
 srhr,workforce,Workforce,system,False,—,Evidence-grounded determinant
-srhr,digital_srhr,Digital Srhr,system,True,protective/up,Evidence-grounded determinant
+srhr,digital_srhr,Digital Srhr,system,False,—,Evidence-grounded determinant
 srhr,education,Girls' education,socioeconomic,True,protective/up,Evidence-grounded determinant
 srhr,adolescent_fertility,Adolescent fertility,socioeconomic,True,risk/down,"Adolescent pregnancy risk (WHO, 2011)"
 srhr,gender_inequality,Gender inequality,socioeconomic,True,risk/down,"Structural driver of acquisition (UNAIDS, 2023)"
