@@ -508,16 +508,34 @@ def _prettify(name: str) -> str:
 
 def full_lever_specs(domain: str) -> list[tuple]:
     """Manual lever specs plus every spec predictor not already a lever, so the module
-    exposes the complete evidence-grounded predictor set as adjustable indicators."""
-    manual = list(LEVER_SPECS.get(domain, []))
+    exposes the complete evidence-grounded predictor set as adjustable indicators.
+    Predictors in EXCLUDE_LEVERS[domain] are omitted: they were shown by the
+    sensitivity screen (scripts/screen_predictors.py) to have no effect on the outcome
+    as an adjustable slider — either redundant with a retained driver, without a
+    modelled pathway, or (for SDG 3) a constituent-outcome input supplied by another
+    module rather than a user lever. They remain nodes in the network where applicable."""
+    exclude = EXCLUDE_LEVERS.get(domain, set())
+    manual = [l for l in LEVER_SPECS.get(domain, []) if l[0] not in exclude]
     seen = {k for k, *_ in manual}
     kind = "score" if domain == "rhis" else "prob"
     for name, layer, direction in _SPEC.domain_predictors(domain):
-        if name in seen or name == OUTCOME.get(domain):
+        if name in seen or name == OUTCOME.get(domain) or name in exclude:
             continue
         manual.append((name, _prettify(name), kind, direction == "good"))
         seen.add(name)
     return manual
+
+
+# Predictors removed from the adjustable lever set after OAT sensitivity screening
+# (they have no effect on the outcome as a slider). Documented in docs/screening_report.md.
+EXCLUDE_LEVERS = {
+    "malaria": {"rdt", "rainfall"},          # treatment via ACT; climatic shock via floods
+    "ncd": {"digital_followup"},             # digital pathway via telemedicine
+    "rhis": {"population_surveys"},          # data source, not a maturity sub-domain
+    "srhr": {"facility_delivery", "pmtct", "digital_srhr"},  # not parents of the SRHR index
+    # SDG 3 constituent outcomes are inputs from other modules, not user sliders:
+    "sdg3": {"mmr", "u5mr", "neonatal_mortality", "hiv_incidence", "tb", "malaria", "ncd"},
+}
 
 
 # auto-augment every Bayesian builder with the full spec predictor set
