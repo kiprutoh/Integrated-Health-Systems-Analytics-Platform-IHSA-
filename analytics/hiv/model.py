@@ -16,6 +16,11 @@ import pandas as pd
 
 from config.settings import ROOT
 from scenario_engine.base import LeverSpec, Outcome, OutcomeSpec, ScenarioModel, State
+from analytics import spec_augment as _aug
+
+# spec predictors already represented by the calibrated core (not re-added as extras)
+_HANDLED = {"art_coverage", "hiv_testing", "pmtct_coverage", "female_literacy",
+            "gender_inequality", "sti_prevalence"}
 
 PANEL = ROOT / "data" / "processed" / "hiv" / "afro_hiv_panel.csv"
 
@@ -72,7 +77,7 @@ class HIVScenarioModel(ScenarioModel):
         LeverSpec("female_literacy", "Female literacy", "%", 0, 100, 1),
         LeverSpec("gender_inequality", "Gender inequality index", "index", 0, 1, 0.01, polarity=+1),
         LeverSpec("sti_prevalence", "STI prevalence", "%", 0, 20, 0.5, polarity=+1),
-    ]
+    ] + _aug.extra_levers("hiv", _HANDLED)
     outcomes = [
         OutcomeSpec("hiv_incidence", "HIV incidence", "per 1,000 uninfected", -1),
     ]
@@ -82,7 +87,7 @@ class HIVScenarioModel(ScenarioModel):
              "pct_know_status", "art_coverage", "hiv_incidence"]
     # evidence-based defaults for predictors not yet in the mined panel
     _defaults = {"key_pop_coverage": 45.0, "pmtct_coverage": 82.0,
-                 "harm_reduction_coverage": 25.0}
+                 "harm_reduction_coverage": 25.0, **_aug.extra_defaults("hiv", _HANDLED)}
 
     def countries(self) -> list[str]:
         return sorted(_panel()["country"].unique().tolist())
@@ -99,9 +104,9 @@ class HIVScenarioModel(ScenarioModel):
 
     def simulate(self, state: State) -> Outcome:
         v = state.values
-        # anchor to observed incidence via relative force of infection
         base = self.baseline(state.country).values
         lam_base = _foi(base)
         lam = _foi(v)
         inc = v["hiv_incidence"] if lam_base <= 0 else base["hiv_incidence"] * lam / lam_base
+        inc *= _aug.modifier("hiv", _HANDLED, base, v)      # full-spec secondary determinants
         return Outcome({"hiv_incidence": round(max(0.0, inc), 4)})

@@ -1,5 +1,27 @@
 # Changelog
 
+## [0.3.5] - 2026-07-06
+### Added
+- Full enterprise predictor spec encoded as a single source of truth
+  (scenario_engine/predictor_spec.py), transcribed from the design document and the
+  WHO AFRO HIS assessment. Every model augments itself from it, so code and spec
+  cannot drift. Predictors per domain now: HIV 44, maternal 35, neonatal 27,
+  child 26, under-5 21, UHC 48, TB 19, malaria 18, NCD 17, RHIS 15, SRHR 14, SDG3 14.
+- Bayesian networks augmented with all spec predictors as sign-constrained outcome
+  parents (scenario_engine.bayes_networks.augment_from_spec, full_lever_specs).
+- Mechanistic models (HIV, maternal, neonatal, child, under-5) augmented with the
+  remaining spec predictors as bounded log-linear modifiers, leaving the calibrated
+  cores intact (analytics/spec_augment.py).
+- Predictor catalogue regenerated (docs/predictor_catalogue.csv, 298 indicators with
+  role, direction and evidence basis).
+### Changed
+- Definitive methodology (docs/IHSA_Definitive_Methodology.docx) now includes the
+  Missing-Data Imputation Framework as sub-section 6.2 (MCAR/MAR/MNAR, the three
+  stages, proper Bayesian MICE draw, Rubin's rules, self-calibration, Figure 4) and a
+  new 7.0 Predictor completeness section with the per-domain predictor table and four
+  added references (Little & Rubin 2019; Rubin 1976, 1987; van Buuren 2011).
+
+
 ## [0.3.4] - 2026-07-05
 ### Added
 - Missing-data imputation framework (warehouse/imputation.py): temporal interpolation

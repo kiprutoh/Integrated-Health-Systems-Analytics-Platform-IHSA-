@@ -80,6 +80,16 @@ def _labels(keys):
     return [LeverSpec(k, pretty.get(k, k), "%", 0, 100, 1) for k in keys]
 
 
+from analytics import spec_augment as _aug  # noqa: E402
+
+# spec predictors already represented by the calibrated cause-deletion cores
+_HANDLED = {
+    "neonatal": {"skilled_attendance", "newborn_resuscitation", "kangaroo_mother_care"},
+    "child": {"vitamin_a", "breastfeeding", "immunization"},
+    "under5": {"neonatal_mortality", "child_mortality", "immunization"},
+}
+
+
 class _ChildSurvivalBase(ScenarioModel):
     _cols = (["nmr", "u5mr"] + list(NEONATAL_IMPACT) + list(CHILD_IMPACT))
 
@@ -91,28 +101,31 @@ class _ChildSurvivalBase(ScenarioModel):
         if sub.empty:
             raise ValueError(f"No child-survival data for {country}")
         row = sub.iloc[0]
-        return State(country, int(row["year"]),
-                     {c: float(row[c]) for c in self._cols if c in row})
+        vals = {c: float(row[c]) for c in self._cols if c in row}
+        for k, d in _aug.extra_defaults(self.domain, _HANDLED.get(self.domain, set())).items():
+            vals.setdefault(k, float(row[k]) if k in row and pd.notna(row[k]) else d)
+        return State(country, int(row["year"]), vals)
 
 
 class NeonatalModel(_ChildSurvivalBase):
     domain = "neonatal"
     title = "Neonatal Mortality Explorer"
     primary_outcome = "nmr"
-    levers = _labels(NEONATAL_IMPACT)
+    levers = _labels(NEONATAL_IMPACT) + _aug.extra_levers("neonatal", _HANDLED["neonatal"])
     outcomes = [OutcomeSpec("nmr", "Neonatal mortality rate", "per 1,000 live births", -1)]
 
     def simulate(self, state: State) -> Outcome:
         base = self.baseline(state.country).values
         f = _reduction_factor(base, state.values, NEONATAL_IMPACT)
-        return Outcome({"nmr": round(base["nmr"] * f, 2)})
+        nmr = base["nmr"] * f * _aug.modifier("neonatal", _HANDLED["neonatal"], base, state.values)
+        return Outcome({"nmr": round(nmr, 2)})
 
 
 class ChildModel(_ChildSurvivalBase):
     domain = "child"
     title = "Child Mortality Explorer (1–59 months)"
     primary_outcome = "child_mortality"
-    levers = _labels(CHILD_IMPACT)
+    levers = _labels(CHILD_IMPACT) + _aug.extra_levers("child", _HANDLED["child"])
     outcomes = [OutcomeSpec("child_mortality", "Child mortality (1–59 months)",
                             "per 1,000 live births", -1)]
 
@@ -120,19 +133,22 @@ class ChildModel(_ChildSurvivalBase):
         base = self.baseline(state.country).values
         pnmr = max(0.0, base["u5mr"] - base["nmr"])
         f = _reduction_factor(base, state.values, CHILD_IMPACT)
-        return Outcome({"child_mortality": round(pnmr * f, 2)})
+        cm = pnmr * f * _aug.modifier("child", _HANDLED["child"], base, state.values)
+        return Outcome({"child_mortality": round(cm, 2)})
 
 
 class UnderFiveModel(_ChildSurvivalBase):
     domain = "under5"
     title = "Under-Five Mortality Explorer"
+    levers = (_labels(list(NEONATAL_IMPACT) + list(CHILD_IMPACT))
+              + _aug.extra_levers("under5", _HANDLED["under5"]))
     primary_outcome = "u5mr"
-    levers = _labels(list(NEONATAL_IMPACT) + list(CHILD_IMPACT))
     outcomes = [OutcomeSpec("u5mr", "Under-five mortality rate", "per 1,000 live births", -1)]
 
     def simulate(self, state: State) -> Outcome:
         base = self.baseline(state.country).values
+        mod = _aug.modifier("under5", _HANDLED["under5"], base, state.values)
         nmr_scen = base["nmr"] * _reduction_factor(base, state.values, NEONATAL_IMPACT)
         pnmr = max(0.0, base["u5mr"] - base["nmr"])
         pnmr_scen = pnmr * _reduction_factor(base, state.values, CHILD_IMPACT)
-        return Outcome({"u5mr": round(nmr_scen + pnmr_scen, 2)})
+        return Outcome({"u5mr": round((nmr_scen + pnmr_scen) * mod, 2)})

@@ -13,6 +13,12 @@ import pandas as pd
 
 from config.settings import ROOT
 from scenario_engine.base import LeverSpec, Outcome, OutcomeSpec, ScenarioModel, State
+from analytics import spec_augment as _aug
+
+# spec predictors already represented by the calibrated elasticity core
+_HANDLED = {"skilled_birth_attendance", "emergency_obstetric_care", "blood_availability",
+            "midwife_density", "facility_delivery", "anc4", "contraceptive_prevalence",
+            "adolescent_fertility", "anaemia", "female_education", "fertility"}
 
 PANEL = ROOT / "data" / "processed" / "maternal" / "afro_maternal_panel.csv"
 
@@ -59,14 +65,15 @@ class MaternalScenarioModel(ScenarioModel):
         LeverSpec("anaemia", "Maternal anaemia prevalence", "%", 0, 100, 1, polarity=+1),
         LeverSpec("adolescent_fertility", "Adolescent fertility rate", "per 1,000", 0, 200, 1, polarity=+1),
         LeverSpec("fertility", "Total fertility rate", "births", 1.0, 7.0, 0.1, polarity=+1),
-    ]
+    ] + _aug.extra_levers("maternal", _HANDLED)
     outcomes = [OutcomeSpec("mmr", "Maternal mortality ratio", "per 100,000 live births", -1)]
 
     _cols = ["mmr", "sba", "anc4", "female_literacy", "fertility"]
     # evidence-based defaults for predictors not yet in the mined panel (typical AFRO)
     _defaults = {"facility_delivery": 62.0, "emonc": 45.0, "blood_availability": 55.0,
                  "postnatal_care": 55.0, "mcpr": 30.0, "midwife_density": 40.0,
-                 "anaemia": 40.0, "adolescent_fertility": 100.0}
+                 "anaemia": 40.0, "adolescent_fertility": 100.0,
+                 **_aug.extra_defaults("maternal", _HANDLED)}
 
     def countries(self) -> list[str]:
         return sorted(_panel()["country"].unique().tolist())
@@ -88,4 +95,5 @@ class MaternalScenarioModel(ScenarioModel):
         for lever, e in ELAST.items():
             log_mult += e * (v.get(lever, base.get(lever, 0.0)) - base.get(lever, 0.0))
         mmr = base["mmr"] * pow(2.718281828, log_mult)
+        mmr *= _aug.modifier("maternal", _HANDLED, base, v)   # full-spec secondary determinants
         return Outcome({"mmr": round(max(0.0, mmr), 1)})

@@ -39,7 +39,7 @@ class BayesianScenarioModel(ScenarioModel):
         self.primary_outcome = self._outcome_node
         self.outcomes = [OutcomeSpec(self._outcome_node, label, unit, -1 if better == "down" else +1)]
         self._better = better
-        self._lever_meta = BN.LEVER_SPECS[domain]
+        self._lever_meta = BN.full_lever_specs(domain)
         self.levers = [
             LeverSpec(k, lbl, "%" if kind == "prob" else "score", 0, 100, 1,
                       polarity=-1 if improves else +1)
